@@ -1,7 +1,12 @@
 <template>
   <div class="flex">
-    <div class="w-64 h-dvh px-1 py-3 mr-3">
-      <UVerticalNavigation :links="links"/>
+    <div class="w-64 h-dvh px-1 py-3">
+      <UVerticalNavigation
+        :links="links"
+        :ui="{
+          padding: 'p-4',
+        }"
+      />
     </div>
     <NuxtPage class="bg-gray-800" />
   </div>
@@ -16,7 +21,7 @@ const links = [{
   to: '/'
 }, {
   label: 'Apostas do dia',
-  icon: 'i-heroicons-home',
+  icon: 'i-heroicons-clipboard-document-list',
   to: '/daily-bets'
 }, {
   label: 'Performance dos modelos',
@@ -24,7 +29,7 @@ const links = [{
   to: '/performance'
 }, {
   label: 'Comparação de modelos',
-  icon: 'i-heroicons-command-line',
+  icon: 'i-heroicons-chart-pie',
   to: '/comparison'
 }]
 </script>
