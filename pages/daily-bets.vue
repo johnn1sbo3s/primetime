@@ -1,12 +1,29 @@
 <template>
     <div class="w-full p-6">
-        <div class="flex gap-5 align-middle">
-            <h1 class="text-2xl font-semibold align-middle">Apostas do dia</h1>
-            <USelect class="pt-0.5"
-            v-model="date" 
-            :options="dates" 
-            />
+        <div class="flex justify-between">
+            <div class="flex gap-5">
+                <h1 class="text-2xl font-semibold align-middle">Apostas do dia</h1>
+                <USelect class="pt-0.5"
+                v-model="date"
+                :options="dates"
+                />
+            </div>
+            <div class="flex gap-2">
+                <div class="pt-1">
+                    Apenas favoritos
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <UToggle
+                        size="md"
+                        on-icon="i-heroicons-check-20-solid"
+                        off-icon="i-heroicons-x-mark-20-solid"
+                        :model-value="favsOnly"
+                        @click="changeFavsOnly"
+                    />
+                </div>
+            </div>
         </div>
+
         <div class="my-4">
             <div class="text-sm text-slate-400 mb-3"
             v-if="bets.length > 0"
@@ -27,6 +44,8 @@
 import { ref } from 'vue'
 
 const sort = { column : 'Modelo', direction: 'asc' };
+const favsOnly = ref(true);
+const favsModels = ref(['LTD V3 Mlp', 'Lay Home V10 Betfair', 'Back Home V3']);
 
 const columns = [
   { key: 'Date', label: 'Date' },
@@ -38,6 +57,9 @@ const columns = [
   { key: 'Modelo', label: 'Modelo', sortable: true },
 ]
 
+const changeFavsOnly = () => {
+    favsOnly.value = !favsOnly.value;
+}
 const filterByDate = (data, selectedDate) => {
     return Object.values(data).filter(item => item.Date === selectedDate);
 };
@@ -88,10 +110,14 @@ const buildTableData = async (chosenDate) => {
   }
 };
 
+
 const qtd_games = computed(() => bets.value.length);
 
 watchEffect(() => {
     buildTableData(date.value);
+    if (favsOnly.value) {
+        bets.value = bets.value.filter(item => favsModels.value.includes(item.Modelo));
+    }
 });
 
 </script>
