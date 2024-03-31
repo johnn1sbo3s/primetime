@@ -60,8 +60,8 @@ const columns = [
 const changeFavsOnly = () => {
     favsOnly.value = !favsOnly.value;
 }
-const filterByDate = (data, selectedDate) => {
-    return Object.values(data).filter(item => item.Date === selectedDate);
+const filterByDate = (selectedDate) => {
+    return Object.values(games).filter(item => item.Date === selectedDate);
 };
 
 const normalizeColumns = (object_data) => {
@@ -87,9 +87,9 @@ const fetchData = async () => {
 };
 
 const dates = ref([]);
+const uniqueDates = new Set();
 
 const games = await fetchData();
-const uniqueDates = new Set();
 Object.values(games).forEach(item => {
     uniqueDates.add(item.Date);
 });
@@ -101,7 +101,7 @@ const bets = ref([]);
 
 const buildTableData = async (chosenDate) => {
   try {
-    const filteredBets = filterByDate(games, chosenDate);
+    const filteredBets = filterByDate(chosenDate);
     normalizeColumns(filteredBets);
     bets.value = filteredBets;
   } catch (error) {
