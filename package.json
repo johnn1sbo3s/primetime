@@ -12,9 +12,11 @@
   },
   "dependencies": {
     "@nuxt/ui": "^2.15.0",
+    "chart.js": "^3.9.1",
     "json-server": "^1.0.0-alpha.23",
     "nuxt": "^3.11.1",
     "vue": "^3.4.21",
+    "vue-chart-3": "^3.1.8",
     "vue-router": "^4.3.0"
   }
 }

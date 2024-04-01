@@ -1,11 +1,26 @@
 <template>
-    <div class="w-full">
-      <div class="flex justify-center">
-        <p>Tela de performance dos modelos</p>
-      </div>
+  <div class="w-full">
+    <div class="flex justify-center">
+      <LineChart :chartData="testData" v-bind="doughnutChartProps" />
     </div>
-  </template>
+  </div>
+</template>
+
+<script setup>
+import { Chart, registerables } from "chart.js";
+import { LineChart } from "vue-chart-3";
+
+Chart.register(...(registerables || []));
+
+const testData = {
+  labels: ["Paris", "Nîmes", "Toulon", "Perpignan", "Autre"],
+  datasets: [
+    {
+      data: [30, 40, 60, 70, 5],
+      backgroundColor: ["#77CEFF", "#0079AF", "#123E6B", "#97B0C4", "#A5C8ED"],
+    },
+  ],
+};
+</script>
   
-  <script setup></script>
-  
-  <style lang="scss" scoped></style>
+<style lang="scss" scoped></style>
