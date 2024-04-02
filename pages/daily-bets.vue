@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="flex flex-col gap-5">
     <div class="flex justify-between">
       <div class="flex gap-5">
         <h1 class="text-2xl font-semibold align-middle">Apostas do dia</h1>
@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div class="my-4">
+    <div>
       <div class="text-sm text-slate-400 mb-3" v-if="bets.length > 0">
         {{ qtd_games }} apostas encontradas
       </div>
