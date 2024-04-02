@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full">
+  <div>
     <div class="flex justify-center">
       <p>Eu ainda não sei o que vai ter nessa tela</p>
     </div>
