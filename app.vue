@@ -1,5 +1,5 @@
 <template>
-  <div class="flex">
+  <div class="flex divide-x divide-slate-800">
     <div class="w-64 mr-2.5 h-dvh px-1 pt-3">
       <UVerticalNavigation
         class="fixed"
@@ -10,7 +10,7 @@
       />
     </div>
     <div class="w-full">
-      <NuxtPage class="bg-gray-800 p-6" />
+      <NuxtPage class="p-6" />
     </div>
   </div>
 </template>
