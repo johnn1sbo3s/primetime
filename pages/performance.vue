@@ -175,6 +175,8 @@ const chartData = ref({
     {
       label: "Acúmulo de capital",
       data: [],
+      borderColor: "rgb(74 222 128)",
+      backgroundColor: "rgb(22 163 74)",
     },
   ],
 });
@@ -185,7 +187,6 @@ const lineChartProps = {
 };
 
 const chartOptions = {
-  borderColor: "rgba(255, 255, 255, 1)",
   responsive: true,
   maintainAspectRatio: true,
   plugins: {
@@ -195,44 +196,19 @@ const chartOptions = {
     },
   },
 };
-const modelsCategories = [
-  "Todos",
-  "Favoritos",
-  "Betfair",
-  "lay_away",
-  "ltd",
-  "lay_home",
-  "lay_zebra",
-  "back_home",
-  "back_away",
-  "over_25",
-  "back_draw",
-  "lay_goleada",
-  "lay_0x2",
-  "lay_2x0",
-];
-const chosenCategory = ref("Todos");
+
 const realData = ref({});
 const valData = ref({});
+const totalData = ref({});
 const showVal = ref(true);
 const listModels = ref([]);
 const betsData = ref({});
 const objectModel = ref({});
+const modelPerformanceData = ref({});
 
-const fetchMetricsData = async () => {
+const fetchData = async (url) => {
   try {
-    const req = await fetch("http://localhost:5000/model_performance");
-    const data = await req.json();
-    return data;
-  } catch (error) {
-    console.error("Erro ao buscar os dados:", error);
-    return [];
-  }
-};
-
-const fetchBetsData = async () => {
-  try {
-    const req = await fetch("http://localhost:5000/model_bets");
+    const req = await fetch(url);
     const data = await req.json();
     return data;
   } catch (error) {
@@ -246,8 +222,12 @@ const changeShowVal = () => {
 };
 
 // Pega os dados da API
-const performanceData = await fetchMetricsData();
-betsData.value = await fetchBetsData();
+const performanceData = await fetchData(
+  "http://localhost:5000/model_performance"
+);
+betsData.value = await fetchData("http://localhost:5000/model_bets");
+
+modelPerformanceData.value = performanceData.value;
 
 Object.values(performanceData).forEach((item) => {
   let name = item.modelo;
@@ -258,6 +238,7 @@ Object.values(performanceData).forEach((item) => {
 });
 
 const chosenModel = ref(listModels.value[0]);
+
 const changeModel = () => {
   Object.values(performanceData).forEach((item) => {
     let name = item.modelo;
@@ -266,29 +247,23 @@ const changeModel = () => {
       objectModel.value = item;
       const { real } = objectModel.value;
       const { val } = objectModel.value;
+      const { total } = objectModel.value;
       realData.value = real;
       valData.value = val;
+      totalData.value = total;
     }
   });
 };
 
-const objChosenBets = ref([]);
-const filterBetsByModel = () => {
-  objChosenBets.value = [];
-  let name = chosenModel.value.replace(/\s+/g, "_").toLowerCase();
-  Object.values(betsData.value).forEach((item) => {
-    if (item.Metodo === name) {
-      objChosenBets.value.push(item);
-    }
-  });
-};
-
-const listBetsResults = ref([]);
-const getBetsArray = () => {
-  listBetsResults.value = [];
-  Object.values(objChosenBets.value).forEach((item) => {
-    listBetsResults.value.push(item.Profit);
-  });
+const getBetsArray = (showValidation = true) => {
+  let nRange = valData.value.entradas;
+  let betsTotal = totalData.value.pl_history;
+  const betsReal = ref(betsTotal.slice(nRange));
+  if (showValidation) {
+    cumulativeSum(betsTotal);
+  } else {
+    cumulativeSum(betsReal.value);
+  }
 };
 
 function cumulativeSum(array) {
@@ -306,9 +281,7 @@ function cumulativeSum(array) {
 }
 
 const changeChartData = () => {
-  filterBetsByModel();
-  getBetsArray();
-  cumulativeSum(listBetsResults.value);
+  getBetsArray(showVal.value);
 };
 
 const buildInfo = () => {
