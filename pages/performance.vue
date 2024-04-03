@@ -7,16 +7,17 @@
         </h1>
       </div>
     </div>
-    <div>
-      <p class="text-sm mb-0.5">Selecione um modelo</p>
-      <USelectMenu
-        searchable
-        searchable-placeholder="Pesquise por um modelo"
-        class="w-1/4"
-        placeholder="Selecione um modelo"
-        :options="listModels"
-        v-model:model-value="chosenModel"
-      />
+    <div class="flex gap-5">
+      <div class="w-1/5">
+        <p class="text-sm mb-0.5">Selecione um modelo</p>
+        <USelectMenu
+          searchable
+          searchable-placeholder="Pesquise por um modelo"
+          placeholder="Selecione um modelo"
+          :options="listModels"
+          v-model:model-value="chosenModel"
+        />
+      </div>
     </div>
     <div class="w-full gap-4 flex">
       <div class="w-2/5">
@@ -164,14 +165,15 @@
 
 <script setup>
 import { Chart, registerables } from "chart.js";
-import { initCustomFormatter } from "vue";
 import { LineChart } from "vue-chart-3";
+
 Chart.register(...(registerables || []));
 
 const chartData = ref({
   labels: [],
   datasets: [
     {
+      label: "Acúmulo de capital",
       data: [],
     },
   ],
@@ -193,6 +195,23 @@ const chartOptions = {
     },
   },
 };
+const modelsCategories = [
+  "Todos",
+  "Favoritos",
+  "Betfair",
+  "lay_away",
+  "ltd",
+  "lay_home",
+  "lay_zebra",
+  "back_home",
+  "back_away",
+  "over_25",
+  "back_draw",
+  "lay_goleada",
+  "lay_0x2",
+  "lay_2x0",
+];
+const chosenCategory = ref("Todos");
 const realData = ref({});
 const valData = ref({});
 const showVal = ref(true);
@@ -292,12 +311,13 @@ const changeChartData = () => {
   cumulativeSum(listBetsResults.value);
 };
 
-changeModel();
-changeChartData();
-
-watchEffect(() => {
+const buildInfo = () => {
   changeModel();
   changeChartData();
+};
+
+watchEffect(() => {
+  buildInfo();
 });
 </script>
 
