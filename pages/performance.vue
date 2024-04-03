@@ -168,61 +168,14 @@ import { initCustomFormatter } from "vue";
 import { LineChart } from "vue-chart-3";
 Chart.register(...(registerables || []));
 
-const realData = ref({});
-const valData = ref({});
-
-const fetchData = async () => {
-  try {
-    const req = await fetch("http://localhost:5000/model_performance");
-    const data = await req.json();
-    return data;
-  } catch (error) {
-    console.error("Erro ao buscar os dados:", error);
-    return [];
-  }
-};
-
-const showVal = ref(true);
-const changeShowVal = () => {
-  showVal.value = !showVal.value;
-};
-
-const performance_data = await fetchData();
-const listModels = ref([]);
-Object.values(performance_data).forEach((item) => {
-  let name = item.modelo;
-  name = name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-  if (!listModels.value.includes(name)) {
-    listModels.value.push(name);
-  }
-});
-
-const chartData = {
-  labels: ["Paris", "Nîmes", "Toulon", "Perpignan", "Autre"],
+const chartData = ref({
+  labels: [],
   datasets: [
     {
-      data: [30, 40, 60, 70, 5],
+      data: [],
     },
   ],
-};
-
-const objectModel = ref({});
-const chosenModel = ref(listModels.value[0]);
-const changeModel = () => {
-  Object.values(performance_data).forEach((item) => {
-    let name = item.modelo;
-    name = name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    if (name === chosenModel.value) {
-      objectModel.value = item;
-      const { real } = objectModel.value;
-      const { val } = objectModel.value;
-      realData.value = real;
-      valData.value = val;
-    }
-  });
-};
-
-changeModel();
+});
 
 const lineChartProps = {
   width: 400,
@@ -240,10 +193,112 @@ const chartOptions = {
     },
   },
 };
+const realData = ref({});
+const valData = ref({});
+const showVal = ref(true);
+const listModels = ref([]);
+const betsData = ref({});
+const objectModel = ref({});
+
+const fetchMetricsData = async () => {
+  try {
+    const req = await fetch("http://localhost:5000/model_performance");
+    const data = await req.json();
+    return data;
+  } catch (error) {
+    console.error("Erro ao buscar os dados:", error);
+    return [];
+  }
+};
+
+const fetchBetsData = async () => {
+  try {
+    const req = await fetch("http://localhost:5000/model_bets");
+    const data = await req.json();
+    return data;
+  } catch (error) {
+    console.error("Erro ao buscar os dados:", error);
+    return [];
+  }
+};
+
+const changeShowVal = () => {
+  showVal.value = !showVal.value;
+};
+
+// Pega os dados da API
+const performanceData = await fetchMetricsData();
+betsData.value = await fetchBetsData();
+
+Object.values(performanceData).forEach((item) => {
+  let name = item.modelo;
+  name = name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  if (!listModels.value.includes(name)) {
+    listModels.value.push(name);
+  }
+});
+
+const chosenModel = ref(listModels.value[0]);
+const changeModel = () => {
+  Object.values(performanceData).forEach((item) => {
+    let name = item.modelo;
+    name = name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    if (name === chosenModel.value) {
+      objectModel.value = item;
+      const { real } = objectModel.value;
+      const { val } = objectModel.value;
+      realData.value = real;
+      valData.value = val;
+    }
+  });
+};
+
+const objChosenBets = ref([]);
+const filterBetsByModel = () => {
+  objChosenBets.value = [];
+  let name = chosenModel.value.replace(/\s+/g, "_").toLowerCase();
+  Object.values(betsData.value).forEach((item) => {
+    if (item.Metodo === name) {
+      objChosenBets.value.push(item);
+    }
+  });
+};
+
+const listBetsResults = ref([]);
+const getBetsArray = () => {
+  listBetsResults.value = [];
+  Object.values(objChosenBets.value).forEach((item) => {
+    listBetsResults.value.push(item.Profit);
+  });
+};
+
+function cumulativeSum(array) {
+  if (array.length === 0) {
+    return [];
+  }
+  let cumSum = [array[0]];
+  let listIndex = [array[0]];
+  for (let i = 1; i < array.length; i++) {
+    cumSum.push(cumSum[i - 1] + array[i]);
+    listIndex.push(i);
+  }
+  chartData.value.labels = listIndex;
+  chartData.value.datasets[0].data = cumSum;
+}
+
+const changeChartData = () => {
+  filterBetsByModel();
+  getBetsArray();
+  cumulativeSum(listBetsResults.value);
+};
+
+changeModel();
+changeChartData();
 
 watchEffect(() => {
   changeModel();
+  changeChartData();
 });
 </script>
-  
+
 <style lang="scss" scoped></style>
