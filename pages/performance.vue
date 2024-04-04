@@ -143,12 +143,14 @@
           </div>
         </template>
         <div>
+          <UButton @click="resetsZoom"> Resetar </UButton>
           <LineChart
             :key="chartKey"
             class="w-full"
             :chartData="chartData"
             :options="chartOptions"
             v-bind="lineChartProps"
+            ref="chartRef"
           />
         </div>
         <div class="mt-3 px-2 flex justify-between">
@@ -165,6 +167,7 @@
 
 
 <script setup>
+import { ref } from "vue";
 import { Chart, registerables } from "chart.js";
 import { LineChart } from "vue-chart-3";
 
@@ -203,10 +206,15 @@ const chartOptions = ref({
   maintainAspectRatio: true,
   scales: {
     y: {
-      beginAtZero: true,
+      beginAtZero: false,
+      ticks: {
+        callback: (value) => {
+          return value.toFixed(1);
+        },
+      },
     },
     x: {
-      beginAtZero: true,
+      beginAtZero: false,
     },
   },
   plugins: {
@@ -223,9 +231,17 @@ const chartOptions = ref({
           enabled: true,
         },
         mode: "x",
+        drag: {
+          enabled: true,
+          borderColor: "rgb(54, 162, 235)",
+          borderWidth: 1,
+          backgroundColor: "rgba(54, 162, 235, 0.3)",
+        },
       },
       pan: {
         enabled: true,
+        mode: "x",
+        modifierKey: "ctrl",
       },
     },
     annotation: {
@@ -324,9 +340,10 @@ function cumulativeSum(array) {
   let listIndex = [];
   for (let i = 1; i < array.length; i++) {
     cumSum.push(cumSum[i - 1] + array[i]);
+  }
+  for (let i = 1; i < array.length + 10; i++) {
     listIndex.push(i);
   }
-  console.log(listIndex);
   chartData.value.labels = listIndex;
   chartData.value.datasets[0].data = cumSum;
 }
