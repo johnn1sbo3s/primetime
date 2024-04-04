@@ -144,6 +144,7 @@
         </template>
         <div>
           <LineChart
+            :key="chartKey"
             class="w-full"
             :chartData="chartData"
             :options="chartOptions"
@@ -168,7 +169,6 @@ import { Chart, registerables } from "chart.js";
 import { LineChart } from "vue-chart-3";
 
 if (process.client) {
-  // código que acessa window aqui
   const zoomPlugin = (await import("chartjs-plugin-zoom")).default;
   Chart.register(zoomPlugin);
 }
@@ -197,6 +197,14 @@ const lineChartProps = {
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: true,
+  scales: {
+    y: {
+      beginAtZero: true,
+    },
+    x: {
+      beginAtZero: false,
+    },
+  },
   plugins: {
     legend: {
       position: "top",
@@ -227,6 +235,7 @@ const listModels = ref([]);
 const betsData = ref({});
 const objectModel = ref({});
 const modelPerformanceData = ref({});
+const chartKey = ref(0);
 
 const fetchData = async (url) => {
   try {
@@ -309,6 +318,7 @@ const changeChartData = () => {
 const buildInfo = () => {
   changeModel();
   changeChartData();
+  chartKey.value++;
 };
 
 watchEffect(() => {
