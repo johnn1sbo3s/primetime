@@ -19,7 +19,7 @@
         />
       </div>
     </div>
-    <div class="w-full gap-4 flex">
+    <div class="w-full gap-3 flex">
       <div class="w-2/5">
         <UCard
           class="mb-3 hover:outline hover:outline-green-300 hover:outline-1"
