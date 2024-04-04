@@ -321,11 +321,12 @@ function cumulativeSum(array) {
     return [];
   }
   let cumSum = [array[0]];
-  let listIndex = [array[0]];
+  let listIndex = [];
   for (let i = 1; i < array.length; i++) {
     cumSum.push(cumSum[i - 1] + array[i]);
     listIndex.push(i);
   }
+  console.log(listIndex);
   chartData.value.labels = listIndex;
   chartData.value.datasets[0].data = cumSum;
 }
