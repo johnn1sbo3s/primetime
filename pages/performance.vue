@@ -167,6 +167,12 @@
 import { Chart, registerables } from "chart.js";
 import { LineChart } from "vue-chart-3";
 
+if (process.client) {
+  // código que acessa window aqui
+  const zoomPlugin = (await import("chartjs-plugin-zoom")).default;
+  Chart.register(zoomPlugin);
+}
+
 Chart.register(...(registerables || []));
 
 const chartData = ref({
@@ -177,6 +183,8 @@ const chartData = ref({
       data: [],
       borderColor: "rgb(74 222 128)",
       backgroundColor: "rgb(22 163 74)",
+      pointRadius: 1,
+      pointHoverRadius: 7,
     },
   ],
 });
@@ -193,6 +201,20 @@ const chartOptions = {
     legend: {
       position: "top",
       display: true,
+    },
+    zoom: {
+      zoom: {
+        wheel: {
+          enabled: true,
+        },
+        pinch: {
+          enabled: true,
+        },
+        mode: "x",
+      },
+      pan: {
+        enabled: true,
+      },
     },
   },
 };
