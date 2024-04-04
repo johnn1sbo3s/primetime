@@ -170,7 +170,9 @@ import { LineChart } from "vue-chart-3";
 
 if (process.client) {
   const zoomPlugin = (await import("chartjs-plugin-zoom")).default;
+  const annotationPlugin = (await import("chartjs-plugin-annotation")).default;
   Chart.register(zoomPlugin);
+  Chart.register(annotationPlugin);
 }
 
 Chart.register(...(registerables || []));
@@ -182,9 +184,11 @@ const chartData = ref({
       label: "Acúmulo de capital",
       data: [],
       borderColor: "rgb(74 222 128)",
-      backgroundColor: "rgb(22 163 74)",
+      backgroundColor: "rgb(74 222 128)",
       pointRadius: 1,
       pointHoverRadius: 7,
+      fill: false,
+      tension: 0.2,
     },
   ],
 });
@@ -194,7 +198,7 @@ const lineChartProps = {
   height: 300,
 };
 
-const chartOptions = {
+const chartOptions = ref({
   responsive: true,
   maintainAspectRatio: true,
   scales: {
@@ -202,7 +206,7 @@ const chartOptions = {
       beginAtZero: true,
     },
     x: {
-      beginAtZero: false,
+      beginAtZero: true,
     },
   },
   plugins: {
@@ -224,8 +228,19 @@ const chartOptions = {
         enabled: true,
       },
     },
+    annotation: {
+      annotations: {
+        line1: {
+          type: "line",
+          xMin: -100,
+          xMax: -100,
+          borderColor: "rgb(20 184 166)",
+          borderWidth: 2,
+        },
+      },
+    },
   },
-};
+});
 
 const realData = ref({});
 const valData = ref({});
@@ -291,8 +306,12 @@ const getBetsArray = (showValidation = true) => {
   let betsTotal = totalData.value.pl_history;
   const betsReal = ref(betsTotal.slice(nRange));
   if (showValidation) {
+    chartOptions.value.plugins.annotation.annotations.line1.xMax = nRange;
+    chartOptions.value.plugins.annotation.annotations.line1.xMin = nRange;
     cumulativeSum(betsTotal);
   } else {
+    chartOptions.value.plugins.annotation.annotations.line1.xMax = -100;
+    chartOptions.value.plugins.annotation.annotations.line1.xMin = -100;
     cumulativeSum(betsReal.value);
   }
 };
