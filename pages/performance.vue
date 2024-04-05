@@ -215,6 +215,11 @@ const chartOptions = ref({
     },
     x: {
       beginAtZero: false,
+      ticks: {
+        callback: (value) => {
+          return value.toFixed(1);
+        },
+      },
     },
   },
   plugins: {
