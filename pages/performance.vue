@@ -20,7 +20,7 @@
       </div>
     </div>
     <div class="w-full gap-3 flex">
-      <div class="w-2/5">
+      <div class="w-2/5 h-full">
         <UCard
           class="mb-3 hover:outline hover:outline-green-300 hover:outline-1"
         >
@@ -156,15 +156,9 @@
             ref="chartRef"
           />
         </div>
-        <div class="mt-0 px-2 flex justify-between">
-          <p class="text-sm font-semibold mt-5">Profit:</p>
-          <p class="text-sm font-semibold mt-5">ROI:</p>
-          <p class="text-sm font-semibold mt-5">Precisão:</p>
-          <p class="text-sm font-semibold mt-5">EV:</p>
-          <p class="text-sm font-semibold mt-5">Entradas:</p>
-        </div>
       </UCard>
     </div>
+    <div class="bg-red-400 w-full h-56"></div>
   </div>
 </template>
 
