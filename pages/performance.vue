@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-5">
+  <div class="flex flex-col gap-3">
     <div class="flex justify-between">
       <div class="flex gap-5">
         <h1 class="text-2xl font-semibold align-middle">
@@ -8,7 +8,7 @@
       </div>
     </div>
     <div class="flex gap-5">
-      <div class="w-1/5">
+      <div class="w-1/5 mb-1">
         <p class="text-sm mb-0.5">Selecione um modelo</p>
         <USelectMenu
           searchable
@@ -63,6 +63,9 @@
       </UCard>
     </div>
     <UCard>
+      <template #header>
+        <p>Jogos</p>
+      </template>
       <UTable class="border border-gray-700 rounded-lg" :rows="rows" />
     </UCard>
   </div>
