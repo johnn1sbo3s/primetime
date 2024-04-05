@@ -20,111 +20,15 @@
       </div>
     </div>
     <div class="w-full gap-3 flex">
-      <div class="w-2/5 h-full">
-        <UCard
-          class="mb-3 hover:outline hover:outline-green-300 hover:outline-1"
-        >
-          <div class="flex flex-col">
-            <p class="font-semibold">Métricas de validação</p>
-            <div class="font-medium text-sm">
-              <div class="grid grid-cols-3 gap-2 my-4">
-                <div class="flex gap-1">
-                  <p class="font-semibold">Profit:</p>
-                  <p>{{ valData.plb.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">ROI:</p>
-                  <p>{{ valData.roi.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">WR:</p>
-                  <p>{{ valData.wr.toFixed(2) }}</p>
-                </div>
-              </div>
-              <div class="grid grid-cols-3 gap-2 my-4">
-                <div class="flex gap-1">
-                  <p class="font-semibold">Odd média:</p>
-                  <p>{{ valData.odds.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">Win médio:</p>
-                  <p>{{ valData.med_gain.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">Loss médio:</p>
-                  <p>{{ valData.med_loss.toFixed(2) }}</p>
-                </div>
-              </div>
-              <div class="grid grid-cols-3 gap-2 my-4">
-                <div class="flex gap-1">
-                  <p class="font-semibold">EV:</p>
-                  <p>{{ valData.ev.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">Máx DD:</p>
-                  <p>{{ valData.dd.toFixed(2) }}</p>
-                </div>
-              </div>
-              <div class="grid grid-cols-3 gap-2 my-4">
-                <div class="flex gap-1">
-                  <p class="font-semibold">Entradas:</p>
-                  <p>{{ valData.entradas }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </UCard>
-        <UCard class="hover:outline hover:outline-green-300 hover:outline-1">
-          <div class="flex flex-col">
-            <p class="font-semibold">Métricas de jogos reais</p>
-            <div class="font-medium text-sm">
-              <div class="grid grid-cols-3 gap-2 my-4">
-                <div class="flex gap-1">
-                  <p class="font-semibold">Profit:</p>
-                  <p>{{ realData.plb.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">ROI:</p>
-                  <p>{{ realData.roi.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">WR:</p>
-                  <p>{{ realData.wr.toFixed(2) }}</p>
-                </div>
-              </div>
-              <div class="grid grid-cols-3 gap-2 my-4">
-                <div class="flex gap-1">
-                  <p class="font-semibold">Odd média:</p>
-                  <p>{{ realData.odds.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">Win médio:</p>
-                  <p>{{ realData.med_gain.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">Loss médio:</p>
-                  <p>{{ realData.med_loss.toFixed(2) }}</p>
-                </div>
-              </div>
-              <div class="grid grid-cols-3 gap-2 my-4">
-                <div class="flex gap-1">
-                  <p class="font-semibold">EV:</p>
-                  <p>{{ realData.ev.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">Máx DD:</p>
-                  <p>{{ realData.dd.toFixed(2) }}</p>
-                </div>
-              </div>
-              <div class="grid grid-cols-3 gap-2 my-4">
-                <div class="flex gap-1">
-                  <p class="font-semibold">Entradas:</p>
-                  <p>{{ realData.entradas }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </UCard>
+      <div class="w-2/5 h-full flex flex-col gap-3">
+        <metrics-card
+          :metrics-data="valData"
+          :card-title="'Métricas de validação'"
+        />
+        <metrics-card
+          :metrics-data="realData"
+          :card-title="'Métricas de jogos reais'"
+        />
       </div>
       <UCard class="w-3/5">
         <template #header>
@@ -158,7 +62,9 @@
         </div>
       </UCard>
     </div>
-    <div class="bg-red-400 w-full h-56"></div>
+    <UCard>
+      <UTable class="border border-gray-700 rounded-lg" :rows="rows" />
+    </UCard>
   </div>
 </template>
 
@@ -173,12 +79,48 @@ if (process.client) {
   const annotationPlugin = (await import("chartjs-plugin-annotation")).default;
   Chart.register(zoomPlugin);
   Chart.register(annotationPlugin);
-  Chart.register(...(registerables || []));
+  Chart.register(...registerables);
 }
 
 function resetsZoom() {
   chartKey.value++;
 }
+
+// const columns = ref({
+//   key:'nome',
+//   label: 'Nomera'
+// });
+
+const rows = ref([
+  {
+    id: 1,
+    nome: "João",
+    idade: 30,
+    email: "j@j.com",
+    esporte: "futebol",
+  },
+  {
+    id: 2,
+    nome: "Maria",
+    idade: 25,
+    email: "m@m.com",
+    esporte: "futebol",
+  },
+  {
+    id: 3,
+    nome: "Pedro",
+    idade: 40,
+    email: "p@p.com",
+    esporte: "futebol",
+  },
+  {
+    id: 4,
+    nome: "Ana",
+    idade: 35,
+    email: "a@a.com",
+    esporte: "futebol",
+  },
+]);
 
 const chartData = ref({
   labels: [],
