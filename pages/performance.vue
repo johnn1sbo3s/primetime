@@ -143,17 +143,20 @@
           </div>
         </template>
         <div>
-          <UButton @click="resetsZoom"> Resetar </UButton>
+          <div class="flex justify-end">
+            <UButton color="gray" variant="solid" @click="resetsZoom">
+              Restaurar zoom
+            </UButton>
+          </div>
           <LineChart
             :key="chartKey"
-            class="w-full"
             :chartData="chartData"
             :options="chartOptions"
             v-bind="lineChartProps"
             ref="chartRef"
           />
         </div>
-        <div class="mt-3 px-2 flex justify-between">
+        <div class="mt-0 px-2 flex justify-between">
           <p class="text-sm font-semibold mt-5">Profit:</p>
           <p class="text-sm font-semibold mt-5">ROI:</p>
           <p class="text-sm font-semibold mt-5">Precisão:</p>
@@ -176,9 +179,12 @@ if (process.client) {
   const annotationPlugin = (await import("chartjs-plugin-annotation")).default;
   Chart.register(zoomPlugin);
   Chart.register(annotationPlugin);
+  Chart.register(...(registerables || []));
 }
 
-Chart.register(...(registerables || []));
+function resetsZoom() {
+  chartKey.value++;
+}
 
 const chartData = ref({
   labels: [],
