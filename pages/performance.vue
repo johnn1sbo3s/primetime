@@ -20,7 +20,7 @@
       </div>
     </div>
     <div class="w-full gap-3 flex">
-      <div class="w-2/5 h-full flex flex-col gap-3">
+      <div class="w-2/5 flex flex-col gap-3">
         <metrics-card
           :metrics-data="valData"
           :card-title="'Métricas de validação'"
@@ -53,11 +53,11 @@
             </UButton>
           </div>
           <LineChart
+            class="w-full"
             :key="chartKey"
             :chartData="chartData"
             :options="chartOptions"
-            v-bind="lineChartProps"
-            ref="chartRef"
+            :style="chartStyle"
           />
         </div>
       </UCard>
@@ -141,14 +141,17 @@ const chartData = ref({
   ],
 });
 
-const lineChartProps = {
-  width: 400,
-  height: 300,
-};
-
 const chartOptions = ref({
   responsive: true,
-  maintainAspectRatio: true,
+  maintainAspectRatio: false,
+  transitions: {
+    zoom: {
+      animation: {
+        duration: 1000,
+        easing: "easeOutCubic",
+      },
+    },
+  },
   scales: {
     y: {
       beginAtZero: false,
@@ -206,6 +209,11 @@ const chartOptions = ref({
       },
     },
   },
+});
+
+const chartStyle = ref({
+  height: "400px",
+  width: "100%",
 });
 
 const realData = ref({});
