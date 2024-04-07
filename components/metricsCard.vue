@@ -4,7 +4,7 @@
       <p class="font-semibold">{{ cardTitle }}</p>
     </template>
     <div class="text-sm flex flex-col gap-5">
-      <div class="grid grid-cols-3">
+      <div class="grid grid-cols-3 gap-y-5">
         <div class="flex gap-1">
           <p class="font-semibold">Profit:</p>
           <p>{{ metricsData.plb.toFixed(2) }}</p>
@@ -17,8 +17,6 @@
           <p class="font-semibold">WR:</p>
           <p>{{ (metricsData.wr * 100).toFixed(0) }}%</p>
         </div>
-      </div>
-      <div class="grid grid-cols-3">
         <div class="flex gap-1">
           <p class="font-semibold">Odd média:</p>
           <p>{{ metricsData.odds.toFixed(2) }}</p>
@@ -31,8 +29,6 @@
           <p class="font-semibold">Loss médio:</p>
           <p>{{ metricsData.med_loss.toFixed(2) }}</p>
         </div>
-      </div>
-      <div class="grid grid-cols-3">
         <div class="flex gap-1">
           <p class="font-semibold">EV:</p>
           <p>{{ metricsData.ev.toFixed(2) }}</p>
