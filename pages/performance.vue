@@ -35,13 +35,13 @@
           <div class="flex justify-between">
             <p class="font-semibold">Gráfico de acúmulo de capital</p>
             <div class="flex gap-2">
-              <p class="text-sm">Exibir validação</p>
+              <p class="text-sm">Exibição por dia</p>
               <UToggle
                 size="md"
                 on-icon="i-heroicons-check-20-solid"
                 off-icon="i-heroicons-x-mark-20-solid"
-                :model-value="showVal"
-                @click="changeShowVal"
+                :model-value="chartByDay"
+                @click="changeChartByDay"
               />
             </div>
           </div>
@@ -219,12 +219,11 @@ const chartStyle = ref({
 const realData = ref({});
 const valData = ref({});
 const totalData = ref({});
-const showVal = ref(true);
 const listModels = ref([]);
 const betsData = ref({});
 const objectModel = ref({});
-const modelPerformanceData = ref({});
 const chartKey = ref(0);
+const chartByDay = ref(false);
 
 const fetchData = async (url) => {
   try {
@@ -237,8 +236,8 @@ const fetchData = async (url) => {
   }
 };
 
-const changeShowVal = () => {
-  showVal.value = !showVal.value;
+const changeChartByDay = () => {
+  chartByDay.value = !chartByDay.value;
 };
 
 // Pega os dados da API
@@ -246,8 +245,6 @@ const performanceData = await fetchData(
   "http://localhost:5000/model_performance"
 );
 betsData.value = await fetchData("http://localhost:5000/model_bets");
-
-modelPerformanceData.value = performanceData.value;
 
 Object.values(performanceData).forEach((item) => {
   let name = item.modelo;
@@ -275,20 +272,45 @@ const changeModel = () => {
   });
 };
 
-const getBetsArray = (showValidation = true) => {
-  let nRange = valData.value.entradas;
-  let betsTotal = totalData.value.pl_history;
-  const betsReal = ref(betsTotal.slice(nRange));
-  if (showValidation) {
-    chartOptions.value.plugins.annotation.annotations.line1.xMax = nRange;
-    chartOptions.value.plugins.annotation.annotations.line1.xMin = nRange;
-    cumulativeSum(betsTotal);
+const getBetsArray = () => {
+  let betsToShow = totalData.value.pl_history;
+  let nRange = -100;
+  if (chartByDay.value === false) {
+    nRange = valData.value.entradas;
+    const profitList = betsToShow.map((item) => item.Profit);
+    cumulativeSum(profitList);
   } else {
-    chartOptions.value.plugins.annotation.annotations.line1.xMax = -100;
-    chartOptions.value.plugins.annotation.annotations.line1.xMin = -100;
-    cumulativeSum(betsReal.value);
+    const lastDayVal = ref(
+      _findLast(betsToShow.slice(0, valData.value.entradas), "Date").Date
+    );
+    const cumulativeBets = resultsByPeriod(betsToShow);
+
+    const datesList = Object.keys(cumulativeBets);
+    const profitList = Object.values(cumulativeBets);
+
+    nRange = _filter(datesList, (date) => date <= lastDayVal.value).length;
+
+    chartData.value.labels = datesList;
+    chartData.value.datasets[0].data = profitList;
   }
+  chartOptions.value.plugins.annotation.annotations.line1.xMax = nRange;
+  chartOptions.value.plugins.annotation.annotations.line1.xMin = nRange;
 };
+
+function resultsByPeriod(betsToShow) {
+  let resultsByDay = _groupBy(betsToShow, "Date");
+
+  const profitByDay = {};
+  let profitSum = 0;
+
+  _forEach(resultsByDay, (apostasDia, date) => {
+    const profit = _map(apostasDia, "Profit");
+    profitSum += _sum(profit);
+    profitByDay[date] = profitSum;
+  });
+
+  return profitByDay;
+}
 
 function cumulativeSum(array) {
   if (array.length === 0) {
@@ -307,7 +329,7 @@ function cumulativeSum(array) {
 }
 
 const changeChartData = () => {
-  getBetsArray(showVal.value);
+  getBetsArray();
 };
 
 const buildInfo = () => {
