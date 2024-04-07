@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     prefix: "_",
     prefixSkip: ["string"],
     upperAfterPrefix: false,
-    exclude: ["map"],
+    exclude: [],
     alias: [
       ["camelCase", "stringToCamelCase"], // => stringToCamelCase
       ["kebabCase", "stringToKebab"], // => stringToKebab
