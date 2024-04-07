@@ -62,12 +62,78 @@
         </div>
       </UCard>
     </div>
-    <UCard>
-      <template #header>
-        <p>Jogos</p>
-      </template>
-      <UTable class="border border-gray-700 rounded-lg" :rows="rows" />
-    </UCard>
+    <div class="gap-3">
+      <UCard>
+        <template #header>
+          <p class="font-semibold">Resultados por blocos de 100 jogos</p>
+        </template>
+        <div class="flex h-full gap-3">
+          <div class="flex flex-col gap-3 w-2/5">
+            <UCard class="h-full">
+              <template #header>
+                <p class="font-semibold">Médias</p>
+              </template>
+              <div class="grid grid-cols-2 text-sm gap-y-5">
+                <div class="flex gap-1">
+                  <p class="font-semibold">Média P/L:</p>
+                  <p>{{ totalData.media.toFixed(2) }}</p>
+                </div>
+                <div class="flex gap-1">
+                  <p class="font-semibold">Desvpad:</p>
+                  <p>{{ totalData.desvpad.toFixed(2) }}</p>
+                </div>
+                <div class="flex gap-1">
+                  <p class="font-semibold">Méd/Desvpad:</p>
+                  <p>{{ totalData.med_dp.toFixed(2) }}</p>
+                </div>
+                <div class="flex gap-1">
+                  <p class="font-semibold">Dif. valid.:</p>
+                  <p>{{ totalData.diff_med_dp_um_96_raiz.toFixed(2) }}</p>
+                </div>
+                <div class="flex gap-1">
+                  <p class="font-semibold">Int. conf.:</p>
+                  <p>
+                    {{ totalData.intervalo_confianca[0].toFixed(2) }} a
+                    {{ totalData.intervalo_confianca[1].toFixed(2) }}
+                  </p>
+                </div>
+              </div>
+            </UCard>
+            <UCard class="h-full">
+              <template #header>
+                <p class="font-semibold">Bloco atual</p>
+              </template>
+              <div class="grid grid-cols-2 text-sm gap-y-5">
+                <div class="flex gap-1">
+                  <p class="font-semibold">Profit:</p>
+                  <p>{{ totalData.media_atual.toFixed(2) }}</p>
+                </div>
+                <div class="flex gap-1">
+                  <p class="font-semibold">Desvpad:</p>
+                  <p>{{ totalData.desvpad_atual.toFixed(2) }}</p>
+                </div>
+                <div class="flex gap-1">
+                  <p class="font-semibold">Jogos:</p>
+                  <p>{{ totalData.qtd_jgs_atual.toFixed(0) }}</p>
+                </div>
+              </div>
+            </UCard>
+          </div>
+          <UCard class="w-2/3">
+            <template #header>
+              <p class="font-semibold">Histórico</p>
+            </template>
+            <div>
+              <UTable
+                class="max-h-80 border border-gray-700 rounded-lg"
+                :rows="blocksHistoryRows"
+                :columns="blocksHistoryColumns"
+              />
+            </div>
+          </UCard>
+        </div>
+      </UCard>
+    </div>
   </div>
 </template>
 
@@ -84,46 +150,6 @@ if (process.client) {
   Chart.register(annotationPlugin);
   Chart.register(...registerables);
 }
-
-function resetsZoom() {
-  chartKey.value++;
-}
-
-// const columns = ref({
-//   key:'nome',
-//   label: 'Nomera'
-// });
-
-const rows = ref([
-  {
-    id: 1,
-    nome: "João",
-    idade: 30,
-    email: "j@j.com",
-    esporte: "futebol",
-  },
-  {
-    id: 2,
-    nome: "Maria",
-    idade: 25,
-    email: "m@m.com",
-    esporte: "futebol",
-  },
-  {
-    id: 3,
-    nome: "Pedro",
-    idade: 40,
-    email: "p@p.com",
-    esporte: "futebol",
-  },
-  {
-    id: 4,
-    nome: "Ana",
-    idade: 35,
-    email: "a@a.com",
-    esporte: "futebol",
-  },
-]);
 
 const chartData = ref({
   labels: [],
@@ -216,6 +242,13 @@ const chartStyle = ref({
   width: "100%",
 });
 
+const blocksHistoryColumns = ref([
+  { key: "Profit", label: "Profit" },
+  { key: "Qtd_Jogos", label: "Quantidade de jogos" },
+  { key: "ROI", label: "ROI" },
+  { key: "Ult_Dia", label: "Último dia do bloco" },
+]);
+
 const realData = ref({});
 const valData = ref({});
 const totalData = ref({});
@@ -224,6 +257,7 @@ const betsData = ref({});
 const objectModel = ref({});
 const chartKey = ref(0);
 const chartByDay = ref(false);
+const blocksHistoryRows = ref([]);
 
 const fetchData = async (url) => {
   try {
@@ -268,6 +302,7 @@ const changeModel = () => {
       realData.value = real;
       valData.value = val;
       totalData.value = total;
+      blocksHistoryRows.value = totalData.value.blocks_history;
     }
   });
 };
@@ -326,6 +361,10 @@ function cumulativeSum(array) {
   }
   chartData.value.labels = listIndex;
   chartData.value.datasets[0].data = cumSum;
+}
+
+function resetsZoom() {
+  chartKey.value++;
 }
 
 const changeChartData = () => {
