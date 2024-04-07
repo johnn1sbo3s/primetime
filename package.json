@@ -20,5 +20,8 @@
     "vue": "^3.4.21",
     "vue-chart-3": "^3.1.8",
     "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "nuxt-lodash": "^2.5.3"
   }
 }
