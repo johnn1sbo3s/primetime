@@ -35,14 +35,16 @@
           <div class="flex justify-between">
             <p class="font-semibold">Gráfico de acúmulo de capital</p>
             <div class="flex gap-2">
+              <div class="inline-block align-middle">
+                <UToggle
+                  size="md"
+                  on-icon="i-heroicons-check-20-solid"
+                  off-icon="i-heroicons-x-mark-20-solid"
+                  :model-value="chartByDay"
+                  @click="changeChartByDay"
+                />
+              </div>
               <p class="text-sm">Exibição por dia</p>
-              <UToggle
-                size="md"
-                on-icon="i-heroicons-check-20-solid"
-                off-icon="i-heroicons-x-mark-20-solid"
-                :model-value="chartByDay"
-                @click="changeChartByDay"
-              />
             </div>
           </div>
         </template>
