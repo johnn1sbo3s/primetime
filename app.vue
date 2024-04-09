@@ -19,34 +19,38 @@
 
 <script setup>
 const links = [
-  {
-    avatar: {
-      src: "https://ipx.nuxt.com/s_16x16/gh_avatar/benjamincanac",
-      srcset: "https://ipx.nuxt.com/s_32x32/gh_avatar/benjamincanac 2x",
-      alt: "",
+  [
+    {
+      avatar: {
+        src: "https://ipx.nuxt.com/s_16x16/gh_avatar/benjamincanac",
+        srcset: "https://ipx.nuxt.com/s_32x32/gh_avatar/benjamincanac 2x",
+        alt: "",
+      },
+      label: "Joneta You Planeta",
     },
-    label: "Joneta You Planeta",
-  },
-  {
-    label: "Dashboard",
-    icon: "i-heroicons-squares-2x2",
-    to: "/",
-  },
-  {
-    label: "Apostas do dia",
-    icon: "i-heroicons-clipboard-document-list",
-    to: "/daily-bets",
-  },
-  {
-    label: "Performance dos modelos",
-    icon: "i-heroicons-chart-bar",
-    to: "/performance",
-  },
-  {
-    label: "Comparação de modelos",
-    icon: "i-heroicons-chart-pie",
-    to: "/comparison",
-  },
+  ],
+  [
+    {
+      label: "Dashboard",
+      icon: "i-heroicons-squares-2x2",
+      to: "/",
+    },
+    {
+      label: "Apostas do dia",
+      icon: "i-heroicons-clipboard-document-list",
+      to: "/daily-bets",
+    },
+    {
+      label: "Performance dos modelos",
+      icon: "i-heroicons-chart-bar",
+      to: "/performance",
+    },
+    {
+      label: "Comparação de modelos",
+      icon: "i-heroicons-chart-pie",
+      to: "/comparison",
+    },
+  ],
 ];
 </script>
 
