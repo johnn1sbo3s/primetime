@@ -7,7 +7,9 @@
         :ui="{
           padding: 'p-4',
         }"
-      />
+      >
+        <template #avatar> </template>
+      </UVerticalNavigation>
     </div>
     <div class="w-full">
       <NuxtPage class="p-6" />
@@ -16,9 +18,15 @@
 </template>
 
 <script setup>
-const route = useRoute();
-
 const links = [
+  {
+    avatar: {
+      src: "https://ipx.nuxt.com/s_16x16/gh_avatar/benjamincanac",
+      srcset: "https://ipx.nuxt.com/s_32x32/gh_avatar/benjamincanac 2x",
+      alt: "",
+    },
+    label: "Joneta You Planeta",
+  },
   {
     label: "Dashboard",
     icon: "i-heroicons-squares-2x2",
