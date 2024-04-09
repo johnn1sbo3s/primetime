@@ -6,8 +6,12 @@ export function resultsByDay(betsToShow) {
 
   _forEach(resultsByDay, (apostasDia, date) => {
     const profit = _map(apostasDia, "Profit");
+    const gameCount = apostasDia.length;
     profitSum += _sum(profit);
-    profitByDay[date] = profitSum;
+    profitByDay[date] = {
+      profit: profitSum,
+      gameCount: gameCount,
+    };
   });
 
   return profitByDay;

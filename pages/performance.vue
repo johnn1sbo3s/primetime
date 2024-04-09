@@ -85,7 +85,7 @@
           </template>
           <div>
             <UTable
-              class="max-h-80 border border-gray-700 rounded-lg"
+              class="h-80 border border-gray-700 rounded-lg"
               :rows="blocksHistoryRows"
               :columns="blocksHistoryColumns"
             />
@@ -98,14 +98,23 @@
         <template #header>
           <p class="font-semibold">Resultados por mês</p>
         </template>
-        <div>
-          <UTable :rows="monthlyBetsRows" />
-        </div>
+        <UTable
+          class="h-80 border border-gray-700 rounded-lg"
+          :rows="monthlyBetsRows"
+          :columns="monthlyBetsColumns"
+        />
       </UCard>
       <UCard>
         <template #header>
           <p class="font-semibold">Resultados por dia</p>
         </template>
+        <div>
+          <UTable
+            class="h-80 border border-gray-700 rounded-lg"
+            :rows="dailyBetsRows"
+            :columns="dailyBetsColumns"
+          />
+        </div>
       </UCard>
     </div>
   </div>
@@ -222,7 +231,19 @@ const blocksHistoryColumns = ref([
   { key: "Ult_Dia", label: "Último dia do bloco" },
 ]);
 
-const monthlyBetsColumns = ref([{ key: "", label: "Modelo" }]);
+const dailyBetsColumns = ref([
+  { key: "date", label: "Dia" },
+  { key: "gain", label: "Ganho" },
+  { key: "accumulated", label: "Acumulado" },
+  { key: "gameCount", label: "Jogos" },
+]);
+
+const monthlyBetsColumns = ref([
+  { key: "monthYear", label: "Mês" },
+  { key: "profit", label: "Profit" },
+  { key: "accumulated", label: "Acumulado" },
+  { key: "gameCount", label: "Jogos" },
+]);
 
 const realData = ref({});
 const valData = ref({});
@@ -233,6 +254,7 @@ const objectModel = ref({});
 const chartKey = ref(0);
 const chartByDay = ref(false);
 const blocksHistoryRows = ref([]);
+const dailyBetsRows = ref([]);
 const monthlyBetsRows = ref([]);
 
 const fetchData = async (url) => {
@@ -287,15 +309,8 @@ const getBetsArray = () => {
   let betsToShow = totalData.value.pl_history;
   let nRange = -100;
   const cumulativeBets = resultsByDay(betsToShow);
-  monthlyBetsRows.value = [];
-  Object.entries(cumulativeBets).forEach((element) => {
-    monthlyBetsRows.value.push({
-      date: new Date(element[0]).toLocaleDateString("pt-BR", {
-        timeZone: "UTC",
-      }),
-      acumulated: element[1].toFixed(2),
-    });
-  });
+  dailyBetsRows.value = buildDailyTable(cumulativeBets);
+  monthlyBetsRows.value = buildMonthlyTable(dailyBetsRows.value);
 
   if (chartByDay.value === false) {
     nRange = valData.value.entradas;
@@ -307,7 +322,7 @@ const getBetsArray = () => {
     );
 
     const datesList = Object.keys(cumulativeBets);
-    const profitList = Object.values(cumulativeBets);
+    const profitList = Object.values(cumulativeBets).map((obj) => obj.profit);
 
     nRange = _filter(datesList, (date) => date <= lastDayVal.value).length;
 
