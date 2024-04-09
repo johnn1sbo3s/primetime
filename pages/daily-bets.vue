@@ -5,8 +5,7 @@
         <h1 class="text-2xl font-semibold align-middle">Apostas do dia</h1>
         <USelect class="pt-0.5" v-model="date" :options="dates" />
       </div>
-      <div class="flex gap-2">
-        <div class="pt-1">Apenas favoritos</div>
+      <div class="flex items-center gap-2">
         <div class="pt-2 flex gap-3">
           <UToggle
             size="md"
@@ -16,6 +15,7 @@
             @click="changeFavsOnly"
           />
         </div>
+        <div class="text-sm pt-1.5">Apenas favoritos</div>
       </div>
     </div>
 
@@ -38,15 +38,19 @@ import { ref } from "vue";
 
 const sort = { column: "Modelo", direction: "asc" };
 const favsOnly = ref(true);
-const favsModels = ref(["LTD V3 Mlp", "Lay Home V10 Betfair", "Back Home V3"]);
+const favsModels = ref([
+  "Ltd V1 Betfair",
+  "Lay Home V10 Betfair",
+  "Back Home V3",
+]);
 
 const columns = [
-  { key: "Date", label: "Date" },
-  { key: "Home", label: "Home Team", sortable: true },
-  { key: "Away", label: "Away Team", sortable: true },
-  { key: "FT_Odds_H", label: "Odds Home" },
-  { key: "FT_Odds_D", label: "Odds Draw" },
-  { key: "FT_Odds_A", label: "Odds Away" },
+  { key: "Date", label: "Data" },
+  { key: "Home", label: "Casa", sortable: true },
+  { key: "Away", label: "Fora", sortable: true },
+  { key: "FT_Odds_H", label: "Odds casa" },
+  { key: "FT_Odds_D", label: "Odds empate" },
+  { key: "FT_Odds_A", label: "Odds fora" },
   { key: "Modelo", label: "Modelo", sortable: true },
 ];
 
