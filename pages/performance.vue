@@ -64,40 +64,52 @@
         </div>
       </UCard>
     </div>
-    <div class="gap-3">
-      <UCard>
-        <template #header>
-          <p class="font-semibold">Resultados por blocos de 100 jogos</p>
-        </template>
-        <div class="flex h-full gap-3">
-          <div class="flex flex-col gap-3 w-2/5">
-            <block-metrics-card
-              :metrics-data="totalData"
-              :card-title="'Médias'"
-            />
-            <current-block-metrics-card
-              :metrics-data="totalData"
-              :card-title="'Bloco atual'"
+    <UCard>
+      <template #header>
+        <p class="font-semibold">Resultados por blocos de 100 jogos</p>
+      </template>
+      <div class="flex h-full gap-3">
+        <div class="flex flex-col gap-3 w-2/5">
+          <block-metrics-card
+            :metrics-data="totalData"
+            :card-title="'Médias'"
+          />
+          <current-block-metrics-card
+            :metrics-data="totalData"
+            :card-title="'Bloco atual'"
+          />
+        </div>
+        <UCard class="w-2/3">
+          <template #header>
+            <p class="font-semibold">Histórico</p>
+          </template>
+          <div>
+            <UTable
+              class="max-h-80 border border-gray-700 rounded-lg"
+              :rows="blocksHistoryRows"
+              :columns="blocksHistoryColumns"
             />
           </div>
-          <UCard class="w-2/3">
-            <template #header>
-              <p class="font-semibold">Histórico</p>
-            </template>
-            <div>
-              <UTable
-                class="max-h-80 border border-gray-700 rounded-lg"
-                :rows="blocksHistoryRows"
-                :columns="blocksHistoryColumns"
-              />
-            </div>
-          </UCard>
+        </UCard>
+      </div>
+    </UCard>
+    <div class="grid grid-cols-2 gap-3">
+      <UCard>
+        <template #header>
+          <p class="font-semibold">Resultados por mês</p>
+        </template>
+        <div>
+          <UTable :rows="monthlyBetsRows" />
         </div>
+      </UCard>
+      <UCard>
+        <template #header>
+          <p class="font-semibold">Resultados por dia</p>
+        </template>
       </UCard>
     </div>
   </div>
 </template>
-
 
 <script setup>
 import { ref } from "vue";
@@ -210,6 +222,8 @@ const blocksHistoryColumns = ref([
   { key: "Ult_Dia", label: "Último dia do bloco" },
 ]);
 
+const monthlyBetsColumns = ref([{ key: "", label: "Modelo" }]);
+
 const realData = ref({});
 const valData = ref({});
 const totalData = ref({});
@@ -219,6 +233,7 @@ const objectModel = ref({});
 const chartKey = ref(0);
 const chartByDay = ref(false);
 const blocksHistoryRows = ref([]);
+const monthlyBetsRows = ref([]);
 
 const fetchData = async (url) => {
   try {
@@ -271,6 +286,17 @@ const changeModel = () => {
 const getBetsArray = () => {
   let betsToShow = totalData.value.pl_history;
   let nRange = -100;
+  const cumulativeBets = resultsByDay(betsToShow);
+  monthlyBetsRows.value = [];
+  Object.entries(cumulativeBets).forEach((element) => {
+    monthlyBetsRows.value.push({
+      date: new Date(element[0]).toLocaleDateString("pt-BR", {
+        timeZone: "UTC",
+      }),
+      acumulated: element[1].toFixed(2),
+    });
+  });
+
   if (chartByDay.value === false) {
     nRange = valData.value.entradas;
     const profitList = betsToShow.map((item) => item.Profit);
@@ -279,7 +305,6 @@ const getBetsArray = () => {
     const lastDayVal = ref(
       _findLast(betsToShow.slice(0, valData.value.entradas), "Date").Date
     );
-    const cumulativeBets = resultsByPeriod(betsToShow);
 
     const datesList = Object.keys(cumulativeBets);
     const profitList = Object.values(cumulativeBets);
@@ -292,21 +317,6 @@ const getBetsArray = () => {
   chartOptions.value.plugins.annotation.annotations.line1.xMax = nRange;
   chartOptions.value.plugins.annotation.annotations.line1.xMin = nRange;
 };
-
-function resultsByPeriod(betsToShow) {
-  let resultsByDay = _groupBy(betsToShow, "Date");
-
-  const profitByDay = {};
-  let profitSum = 0;
-
-  _forEach(resultsByDay, (apostasDia, date) => {
-    const profit = _map(apostasDia, "Profit");
-    profitSum += _sum(profit);
-    profitByDay[date] = profitSum;
-  });
-
-  return profitByDay;
-}
 
 function cumulativeSum(array) {
   if (array.length === 0) {
