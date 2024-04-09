@@ -27,6 +27,7 @@ const links = [
         alt: "",
       },
       label: "Joneta You Planeta",
+      to: "https://github.com/johnn1sbo3s",
     },
   ],
   [
