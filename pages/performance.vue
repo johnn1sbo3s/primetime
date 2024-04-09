@@ -75,25 +75,10 @@
               :metrics-data="totalData"
               :card-title="'Médias'"
             />
-            <UCard class="h-full">
-              <template #header>
-                <p class="font-semibold">Bloco atual</p>
-              </template>
-              <div class="grid grid-cols-2 text-sm gap-y-5">
-                <div class="flex gap-1">
-                  <p class="font-semibold">Profit:</p>
-                  <p>{{ totalData.media_atual.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">Desvpad:</p>
-                  <p>{{ totalData.desvpad_atual.toFixed(2) }}</p>
-                </div>
-                <div class="flex gap-1">
-                  <p class="font-semibold">Jogos:</p>
-                  <p>{{ totalData.qtd_jgs_atual.toFixed(0) }}</p>
-                </div>
-              </div>
-            </UCard>
+            <current-block-metrics-card
+              :metrics-data="totalData"
+              :card-title="'Bloco atual'"
+            />
           </div>
           <UCard class="w-2/3">
             <template #header>
