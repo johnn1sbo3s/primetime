@@ -98,6 +98,7 @@
         <template #header>
           <p class="font-semibold">Resultados por mês</p>
         </template>
+        <p class="mb-3 text-sm">{{ monthlyBetsRows.length }} meses</p>
         <UTable
           class="h-80 border border-gray-700 rounded-lg"
           :rows="monthlyBetsRows"
@@ -108,13 +109,12 @@
         <template #header>
           <p class="font-semibold">Resultados por dia</p>
         </template>
-        <div>
-          <UTable
-            class="h-80 border border-gray-700 rounded-lg"
-            :rows="dailyBetsRows"
-            :columns="dailyBetsColumns"
-          />
-        </div>
+        <p class="mb-3 text-sm">{{ dailyBetsRows.length }} dias</p>
+        <UTable
+          class="h-80 border border-gray-700 rounded-lg"
+          :rows="dailyBetsRows"
+          :columns="dailyBetsColumns"
+        />
       </UCard>
     </div>
   </div>
