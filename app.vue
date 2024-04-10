@@ -6,6 +6,8 @@
         :links="links"
         :ui="{
           padding: 'p-4',
+          gap: 'gap-2',
+          avatar: 'w-5 h-5',
         }"
       >
         <template #avatar> </template>
