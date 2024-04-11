@@ -6,13 +6,12 @@
       searchable
       searchable-placeholder="Pesquise por categoria"
       placeholder="Selecione uma categoria"
-      :options="['1', '2', '3', '4', '5']"
+      :options="modelsList"
       v-model:model-value="chosenCategory"
     />
-    <p>{{ chosenCategory }}</p>
     <div class="h-96 w-full">
       <div>
-        <p class="mb-3 text-sm">5 meses</p>
+        <p class="mb-3 text-sm">5 modelos encontrados</p>
         <UTable
           class="border border-gray-700 rounded-lg"
           :rows="performanceDataRows"
@@ -23,7 +22,7 @@
 </template>
 
 <script setup>
-const chosenCategory = ref("Category");
+const chosenCategory = ref("");
 const performanceDataRows = ref([]);
 
 const { data: performanceData, error } = await useFetch(
@@ -31,8 +30,8 @@ const { data: performanceData, error } = await useFetch(
 );
 
 const models = ref(Object.values(performanceData.value));
-const modelsList = models.value.map((item) => item.modelo);
-console.log("🚀 ~ modelsList:", modelsList);
+const modelsList = normalizeModelName(models.value.map((item) => item.modelo));
+chosenCategory.value = modelsList[0];
 </script>
 
 <style>
