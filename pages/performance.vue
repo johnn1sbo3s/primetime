@@ -1,12 +1,6 @@
 <template>
   <div class="flex flex-col gap-3">
-    <div class="flex justify-between">
-      <div class="flex gap-5">
-        <h1 class="text-2xl font-semibold align-middle">
-          Performance dos modelos
-        </h1>
-      </div>
-    </div>
+    <page-header title="Performance dos modelos" />
     <div class="flex gap-5">
       <div class="w-1/5 mb-1">
         <p class="text-sm mb-0.5">Selecione um modelo</p>

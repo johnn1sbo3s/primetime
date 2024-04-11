@@ -1,10 +1,11 @@
 <template>
   <div class="flex flex-col gap-5">
     <div class="flex justify-between">
-      <div class="flex gap-5">
-        <h1 class="text-2xl font-semibold align-middle">Apostas do dia</h1>
-        <USelect class="pt-0.5" v-model="date" :options="dates" />
-      </div>
+      <page-header title="Apostas do dia">
+        <template #right>
+          <USelect class="pt-0.5" v-model="date" :options="dates" />
+        </template>
+      </page-header>
       <div class="flex items-center gap-2">
         <div class="pt-2 flex gap-3">
           <UToggle

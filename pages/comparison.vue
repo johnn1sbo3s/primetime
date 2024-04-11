@@ -1,11 +1,8 @@
 <template>
-  <div>
-    <div class="flex justify-center">
-      <p>Tela de comparação dos modelos</p>
-    </div>
-  </div>
+  <page-header title="Comparação de modelos"> </page-header>
 </template>
-  
-  <script setup></script>
-  
-  <style lang="scss" scoped></style>
+
+<script setup></script>
+
+<style>
+</style>
