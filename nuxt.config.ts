@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/ui', "nuxt-lodash",],
-  devtools: { enabled: true },
+  modules: ["@nuxt/ui", "nuxt-lodash"],
+  devtools: { enabled: false },
 
   lodash: {
     prefix: "_",
@@ -14,4 +14,4 @@ export default defineNuxtConfig({
       ["isDate", "isLodashDate"], // => _isLodashDate
     ],
   },
-})
+});

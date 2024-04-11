@@ -1,23 +1,15 @@
 <template>
   <div class="flex flex-col gap-3">
-    <div class="flex justify-between">
-      <div class="flex gap-5">
-        <h1 class="text-2xl font-semibold align-middle">
-          Performance dos modelos
-        </h1>
-      </div>
-    </div>
+    <page-header title="Performance dos modelos" />
     <div class="flex gap-5">
-      <div class="w-1/5 mb-1">
-        <p class="text-sm mb-0.5">Selecione um modelo</p>
-        <USelectMenu
-          searchable
-          searchable-placeholder="Pesquise por um modelo"
-          placeholder="Selecione um modelo"
-          :options="listModels"
-          v-model:model-value="chosenModel"
-        />
-      </div>
+      <USelectMenu
+        class="w-1/5"
+        searchable
+        searchable-placeholder="Pesquise por um modelo"
+        placeholder="Selecione um modelo"
+        :options="listModels"
+        v-model:model-value="chosenModel"
+      />
     </div>
     <div class="w-full gap-3 flex">
       <div class="w-2/5 flex flex-col gap-3">
@@ -98,6 +90,7 @@
         <template #header>
           <p class="font-semibold">Resultados por mês</p>
         </template>
+        <p class="mb-3 text-sm">{{ monthlyBetsRows.length }} meses</p>
         <UTable
           class="h-80 border border-gray-700 rounded-lg"
           :rows="monthlyBetsRows"
@@ -108,15 +101,25 @@
         <template #header>
           <p class="font-semibold">Resultados por dia</p>
         </template>
-        <div>
-          <UTable
-            class="h-80 border border-gray-700 rounded-lg"
-            :rows="dailyBetsRows"
-            :columns="dailyBetsColumns"
-          />
-        </div>
+        <p class="mb-3 text-sm">{{ dailyBetsRows.length }} dias</p>
+        <UTable
+          class="h-80 border border-gray-700 rounded-lg"
+          :rows="dailyBetsRows"
+          :columns="dailyBetsColumns"
+        />
       </UCard>
     </div>
+    <UCard>
+      <template #header>
+        <p class="font-semibold">Jogos reais</p>
+      </template>
+      <p class="mb-3 text-sm">{{ allBetsDataFilteredRows.length }} jogos</p>
+      <UTable
+        class="h-96 border border-gray-700 rounded-lg"
+        :rows="allBetsDataFilteredRows"
+        :columns="allBetsDataFilteredColumns"
+      />
+    </UCard>
   </div>
 </template>
 
@@ -234,15 +237,24 @@ const blocksHistoryColumns = ref([
 const dailyBetsColumns = ref([
   { key: "date", label: "Dia" },
   { key: "gain", label: "Ganho" },
-  { key: "accumulated", label: "Acumulado" },
   { key: "gameCount", label: "Jogos" },
+  { key: "accumulated", label: "Acumulado" },
 ]);
 
 const monthlyBetsColumns = ref([
   { key: "monthYear", label: "Mês" },
   { key: "profit", label: "Profit" },
-  { key: "accumulated", label: "Acumulado" },
   { key: "gameCount", label: "Jogos" },
+  { key: "accumulated", label: "Acumulado" },
+]);
+
+const allBetsDataFilteredColumns = ref([
+  { key: "Date", label: "Data" },
+  { key: "Home", label: "Casa" },
+  { key: "Away", label: "Fora" },
+  { key: "Odds", label: "Odds" },
+  { key: "Resultado", label: "Resultado" },
+  { key: "Profit", label: "Profit" },
 ]);
 
 const realData = ref({});
@@ -256,6 +268,7 @@ const chartByDay = ref(false);
 const blocksHistoryRows = ref([]);
 const dailyBetsRows = ref([]);
 const monthlyBetsRows = ref([]);
+const allBetsDataFilteredRows = ref([]);
 
 const fetchData = async (url) => {
   try {
@@ -349,6 +362,12 @@ function cumulativeSum(array) {
   chartData.value.datasets[0].data = cumSum;
 }
 
+const buildAllBetsTable = () => {
+  let name = chosenModel.value.toLowerCase().replace(/\s+/g, "_");
+  allBetsDataFilteredRows.value = _filter(betsData.value, { Metodo: name });
+  allBetsDataFilteredRows.value = Object.values(allBetsDataFilteredRows.value);
+};
+
 function resetsZoom() {
   chartKey.value++;
 }
@@ -360,6 +379,7 @@ const changeChartData = () => {
 const buildInfo = () => {
   changeModel();
   changeChartData();
+  buildAllBetsTable();
   chartKey.value++;
 };
 

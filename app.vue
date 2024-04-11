@@ -6,6 +6,8 @@
         :links="links"
         :ui="{
           padding: 'p-4',
+          gap: 'gap-2',
+          avatar: 'w-5 h-5',
         }"
       >
         <template #avatar> </template>
@@ -22,8 +24,8 @@ const links = [
   [
     {
       avatar: {
-        src: "https://ipx.nuxt.com/s_16x16/gh_avatar/benjamincanac",
-        srcset: "https://ipx.nuxt.com/s_32x32/gh_avatar/benjamincanac 2x",
+        src: "https://avatars.githubusercontent.com/u/49643446?v=4",
+        srcset: "",
         alt: "",
       },
       label: "Joneta You Planeta",
