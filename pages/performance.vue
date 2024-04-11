@@ -374,10 +374,6 @@ const buildAllBetsTable = () => {
   let name = chosenModel.value.toLowerCase().replace(/\s+/g, "_");
   allBetsDataFilteredRows.value = _filter(betsData.value, { Metodo: name });
   allBetsDataFilteredRows.value = Object.values(allBetsDataFilteredRows.value);
-  console.log(
-    "🚀 ~ allBetsDataFilteredRows.value:",
-    allBetsDataFilteredRows.value
-  );
 };
 
 function resetsZoom() {
