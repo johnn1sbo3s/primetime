@@ -117,6 +117,17 @@
         />
       </UCard>
     </div>
+    <UCard>
+      <template #header>
+        <p class="font-semibold">Jogos reais</p>
+      </template>
+      <p class="mb-3 text-sm">{{ allBetsDataFilteredRows.length }} jogos</p>
+      <UTable
+        class="h-96 border border-gray-700 rounded-lg"
+        :rows="allBetsDataFilteredRows"
+        :columns="allBetsDataFilteredColumns"
+      />
+    </UCard>
   </div>
 </template>
 
@@ -234,15 +245,24 @@ const blocksHistoryColumns = ref([
 const dailyBetsColumns = ref([
   { key: "date", label: "Dia" },
   { key: "gain", label: "Ganho" },
-  { key: "accumulated", label: "Acumulado" },
   { key: "gameCount", label: "Jogos" },
+  { key: "accumulated", label: "Acumulado" },
 ]);
 
 const monthlyBetsColumns = ref([
   { key: "monthYear", label: "Mês" },
   { key: "profit", label: "Profit" },
-  { key: "accumulated", label: "Acumulado" },
   { key: "gameCount", label: "Jogos" },
+  { key: "accumulated", label: "Acumulado" },
+]);
+
+const allBetsDataFilteredColumns = ref([
+  { key: "Date", label: "Data" },
+  { key: "Home", label: "Casa" },
+  { key: "Away", label: "Fora" },
+  { key: "Odds", label: "Odds" },
+  { key: "Resultado", label: "Resultado" },
+  { key: "Profit", label: "Profit" },
 ]);
 
 const realData = ref({});
@@ -256,6 +276,7 @@ const chartByDay = ref(false);
 const blocksHistoryRows = ref([]);
 const dailyBetsRows = ref([]);
 const monthlyBetsRows = ref([]);
+const allBetsDataFilteredRows = ref([]);
 
 const fetchData = async (url) => {
   try {
@@ -349,6 +370,16 @@ function cumulativeSum(array) {
   chartData.value.datasets[0].data = cumSum;
 }
 
+const buildAllBetsTable = () => {
+  let name = chosenModel.value.toLowerCase().replace(/\s+/g, "_");
+  allBetsDataFilteredRows.value = _filter(betsData.value, { Metodo: name });
+  allBetsDataFilteredRows.value = Object.values(allBetsDataFilteredRows.value);
+  console.log(
+    "🚀 ~ allBetsDataFilteredRows.value:",
+    allBetsDataFilteredRows.value
+  );
+};
+
 function resetsZoom() {
   chartKey.value++;
 }
@@ -360,6 +391,7 @@ const changeChartData = () => {
 const buildInfo = () => {
   changeModel();
   changeChartData();
+  buildAllBetsTable();
   chartKey.value++;
 };
 
