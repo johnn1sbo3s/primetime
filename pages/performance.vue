@@ -2,16 +2,14 @@
   <div class="flex flex-col gap-3">
     <page-header title="Performance dos modelos" />
     <div class="flex gap-5">
-      <div class="w-1/5 mb-1">
-        <p class="text-sm mb-0.5">Selecione um modelo</p>
-        <USelectMenu
-          searchable
-          searchable-placeholder="Pesquise por um modelo"
-          placeholder="Selecione um modelo"
-          :options="listModels"
-          v-model:model-value="chosenModel"
-        />
-      </div>
+      <USelectMenu
+        class="w-1/5"
+        searchable
+        searchable-placeholder="Pesquise por um modelo"
+        placeholder="Selecione um modelo"
+        :options="listModels"
+        v-model:model-value="chosenModel"
+      />
     </div>
     <div class="w-full gap-3 flex">
       <div class="w-2/5 flex flex-col gap-3">
