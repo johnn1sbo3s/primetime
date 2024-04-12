@@ -1,8 +1,8 @@
 <template>
   <div class="flex h-full gap-2">
-    <div class="w-1/6 h-full px-1">
+    <div class="w-1/6 h-full">
       <UVerticalNavigation
-        class="fixed w-1/6 h-full pt-2"
+        class="fixed w-1/6 px-2 h-full pt-2 bg-slate-50 dark:bg-gray-900"
         :links="links"
         :ui="{
           padding: 'p-4',
@@ -45,12 +45,12 @@ const links = [
       to: "/daily-bets",
     },
     {
-      label: "Performance dos modelos",
+      label: "Performance",
       icon: "i-heroicons-chart-bar",
       to: "/performance",
     },
     {
-      label: "Comparação de modelos",
+      label: "Comparador",
       icon: "i-heroicons-chart-pie",
       to: "/comparison",
     },
