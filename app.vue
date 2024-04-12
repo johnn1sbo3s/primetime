@@ -30,6 +30,7 @@ const links = [
       },
       label: "Joneta You Planeta",
       to: "https://github.com/johnn1sbo3s",
+      target: "_blank",
     },
   ],
   [
