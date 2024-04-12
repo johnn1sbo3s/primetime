@@ -158,8 +158,8 @@ const chartData = ref({
     {
       label: "Acúmulo de capital",
       data: [],
-      borderColor: "rgb(74 222 128)",
-      backgroundColor: "rgb(74 222 128)",
+      borderColor: "#6d28d9",
+      backgroundColor: "#6d28d9",
       pointRadius: 1,
       pointHoverRadius: 7,
       fill: false,
