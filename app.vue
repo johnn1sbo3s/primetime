@@ -1,8 +1,8 @@
 <template>
-  <div class="flex divide-x divide-slate-800">
-    <div class="w-64 mr-2.5 h-dvh px-1 pt-3">
+  <div class="flex h-full gap-2">
+    <div class="w-1/6 h-full px-1">
       <UVerticalNavigation
-        class="fixed"
+        class="fixed w-1/6 h-full pt-2"
         :links="links"
         :ui="{
           padding: 'p-4',
@@ -13,7 +13,7 @@
         <template #avatar> </template>
       </UVerticalNavigation>
     </div>
-    <div class="w-full">
+    <div class="w-4/5">
       <NuxtPage class="p-6" />
     </div>
   </div>
