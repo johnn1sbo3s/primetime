@@ -15,7 +15,10 @@
           {{ performanceDataRows.length }} modelos
         </p>
         <UTable
-          class="border border-gray-700 rounded-lg"
+          :ui="{
+            wrapper:
+              'relative overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg',
+          }"
           :rows="performanceDataRows"
           :columns="performanceDataColumns"
         />

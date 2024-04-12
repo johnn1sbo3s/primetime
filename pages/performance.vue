@@ -77,7 +77,11 @@
           </template>
           <div>
             <UTable
-              class="h-80 border border-gray-700 rounded-lg"
+              class="h-80"
+              :ui="{
+                wrapper:
+                  'relative overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg',
+              }"
               :rows="blocksHistoryRows"
               :columns="blocksHistoryColumns"
             />
@@ -92,7 +96,11 @@
         </template>
         <p class="mb-3 text-sm">{{ monthlyBetsRows.length }} meses</p>
         <UTable
-          class="h-80 border border-gray-700 rounded-lg"
+          class="h-80"
+          :ui="{
+            wrapper:
+              'relative overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg',
+          }"
           :rows="monthlyBetsRows"
           :columns="monthlyBetsColumns"
         />
@@ -103,7 +111,11 @@
         </template>
         <p class="mb-3 text-sm">{{ dailyBetsRows.length }} dias</p>
         <UTable
-          class="h-80 border border-gray-700 rounded-lg"
+          class="h-80"
+          :ui="{
+            wrapper:
+              'relative overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg',
+          }"
           :rows="dailyBetsRows"
           :columns="dailyBetsColumns"
         />
@@ -115,7 +127,11 @@
       </template>
       <p class="mb-3 text-sm">{{ allBetsDataFilteredRows.length }} jogos</p>
       <UTable
-        class="h-96 border border-gray-700 rounded-lg"
+        class="h-96"
+        :ui="{
+          wrapper:
+            'relative overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg',
+        }"
         :rows="allBetsDataFilteredRows"
         :columns="allBetsDataFilteredColumns"
       />
