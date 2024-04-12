@@ -252,7 +252,7 @@ const blocksHistoryColumns = ref([
 
 const dailyBetsColumns = ref([
   { key: "date", label: "Dia" },
-  { key: "gain", label: "Ganho" },
+  { key: "gain", label: "Profit" },
   { key: "gameCount", label: "Jogos" },
   { key: "accumulated", label: "Acumulado" },
 ]);
