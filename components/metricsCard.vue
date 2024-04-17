@@ -1,5 +1,5 @@
 <template>
-  <UCard class="hover:outline hover:outline-green-300 hover:outline-1 h-full">
+  <UCard class="hover:outline hover:outline-violet-400 hover:outline-1 h-full">
     <template #header>
       <p class="font-semibold">{{ cardTitle }}</p>
     </template>

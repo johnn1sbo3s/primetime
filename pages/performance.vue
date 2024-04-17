@@ -77,7 +77,11 @@
           </template>
           <div>
             <UTable
-              class="h-80 border border-gray-700 rounded-lg"
+              class="h-80"
+              :ui="{
+                wrapper:
+                  'relative overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg',
+              }"
               :rows="blocksHistoryRows"
               :columns="blocksHistoryColumns"
             />
@@ -92,7 +96,11 @@
         </template>
         <p class="mb-3 text-sm">{{ monthlyBetsRows.length }} meses</p>
         <UTable
-          class="h-80 border border-gray-700 rounded-lg"
+          class="h-80"
+          :ui="{
+            wrapper:
+              'relative overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg',
+          }"
           :rows="monthlyBetsRows"
           :columns="monthlyBetsColumns"
         />
@@ -103,7 +111,11 @@
         </template>
         <p class="mb-3 text-sm">{{ dailyBetsRows.length }} dias</p>
         <UTable
-          class="h-80 border border-gray-700 rounded-lg"
+          class="h-80"
+          :ui="{
+            wrapper:
+              'relative overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg',
+          }"
           :rows="dailyBetsRows"
           :columns="dailyBetsColumns"
         />
@@ -115,7 +127,11 @@
       </template>
       <p class="mb-3 text-sm">{{ allBetsDataFilteredRows.length }} jogos</p>
       <UTable
-        class="h-96 border border-gray-700 rounded-lg"
+        class="h-96"
+        :ui="{
+          wrapper:
+            'relative overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg',
+        }"
         :rows="allBetsDataFilteredRows"
         :columns="allBetsDataFilteredColumns"
       />
@@ -142,11 +158,11 @@ const chartData = ref({
     {
       label: "Acúmulo de capital",
       data: [],
-      borderColor: "rgb(74 222 128)",
-      backgroundColor: "rgb(74 222 128)",
+      borderColor: "#6d28d9",
+      backgroundColor: "rgb(109, 40, 217, 0.05)",
       pointRadius: 1,
       pointHoverRadius: 7,
-      fill: false,
+      fill: true,
       tension: 0.2,
     },
   ],
@@ -236,7 +252,7 @@ const blocksHistoryColumns = ref([
 
 const dailyBetsColumns = ref([
   { key: "date", label: "Dia" },
-  { key: "gain", label: "Ganho" },
+  { key: "gain", label: "Profit" },
   { key: "gameCount", label: "Jogos" },
   { key: "accumulated", label: "Acumulado" },
 ]);
