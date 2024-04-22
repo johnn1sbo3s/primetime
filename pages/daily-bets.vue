@@ -80,7 +80,7 @@ const normalizeColumns = (object_data) => {
 
 const fetchData = async () => {
   try {
-    const req = await fetch("http://localhost:5000/daily_bets");
+    const req = await fetch("https://primetime-api.onrender.com/daily-bets");
     const data = await req.json();
     return data;
   } catch (error) {

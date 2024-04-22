@@ -88,7 +88,7 @@ function buildTableObject(objectList) {
 }
 
 const { data: performanceData, error } = await useFetch(
-  "http://localhost:5000/model_performance"
+  "https://primetime-api.onrender.com/model-performance"
 );
 
 const buildComparisonTable = () => {

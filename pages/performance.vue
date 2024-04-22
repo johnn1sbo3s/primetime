@@ -303,9 +303,10 @@ const changeChartByDay = () => {
 
 // Pega os dados da API
 const performanceData = await fetchData(
-  "http://localhost:5000/model_performance"
+  "https://primetime-api.onrender.com/model-performance"
 );
-betsData.value = await fetchData("http://localhost:5000/model_bets");
+
+betsData.value = await fetchData("https://primetime-api.onrender.com/model-bets");
 
 Object.values(performanceData).forEach((item) => {
   let name = item.modelo;
