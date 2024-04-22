@@ -59,4 +59,7 @@ const links = [
 </script>
 
 <style>
+div {
+  font-family: satoshi, sans-serif;
+}
 </style>

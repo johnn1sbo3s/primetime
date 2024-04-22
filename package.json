@@ -11,6 +11,7 @@
     "backend": "json-server --watch db/db.json --port 5000"
   },
   "dependencies": {
+    "@nuxt/fonts": "^0.6.1",
     "@nuxt/ui": "^2.15.0",
     "chart.js": "^3.9.1",
     "chartjs-plugin-annotation": "^2.2.1",
