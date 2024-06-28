@@ -1,7 +1,9 @@
 <template>
   <div class="flex justify-center">
     <div class="flex flex-col gap-y-3">
-      <p>Esta tela está em construção</p>
+    <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+      ISTO NÃO É UMA RECOMENDAÇÃO DE INVESTIMENTO. APOSTE POR SUA CONTA E RISCO!
+    </div>
       <div class="flex justify-center">
         <UButton size="lg">
           <a
