@@ -14,6 +14,7 @@
       </UVerticalNavigation>
     </div>
     <div class="w-4/5">
+      <NuxtLoadingIndicator/>
       <NuxtPage class="p-6" />
     </div>
   </div>
