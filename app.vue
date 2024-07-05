@@ -21,6 +21,11 @@
 </template>
 
 <script setup>
+
+useHead({
+  title: "Primetime - Apostas esportivas",
+})
+
 const links = [
   [
     {
