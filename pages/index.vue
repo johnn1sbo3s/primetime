@@ -16,9 +16,33 @@
           :items="bestModels"
         />
 
+        <yesterday-details-card
+          number-bets="123"
+          number-models="22"
+          positive-models="15"
+        />
+      </div>
+    </u-card>
+
+    <u-card>
+      <template #header>
+        <p class="font-semibold">Resultados do mês</p>
+      </template>
+
+      <div class="flex gap-5 w-full">
+        <yesterday-metrics-card
+          :items="metrics"
+        />
+
         <ranking-models
-          :title="'Piores 3 modelos'"
-          :items="worstModels"
+          :title="'Top 3 modelos'"
+          :items="bestModels"
+        />
+
+        <yesterday-details-card
+          number-bets="2222"
+          number-models="55"
+          positive-models="45"
         />
       </div>
     </u-card>
@@ -31,11 +55,6 @@
         <div class="flex gap-5 w-full">
           <ranking-models
             :title="'Profit'"
-            :items="bestModels"
-          />
-
-          <ranking-models
-            :title="'Win Rate'"
             :items="bestModels"
           />
 
