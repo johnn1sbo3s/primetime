@@ -12,7 +12,11 @@
                     class="flex align-middle justify-between text-gray-700"
                 >
                     <div class="hover:text-purple-700 hover:cursor-pointer">{{ item.name }}</div>
-                    <div>{{ item.profit }} u</div>
+                    <div
+                        class="font-semibold"
+                        :class="item.profit > 0 ? 'text-green-700' : 'text-red-700'"
+                    >
+                    {{ item.profit }} u</div>
                 </div>
             </div>
         </template>
