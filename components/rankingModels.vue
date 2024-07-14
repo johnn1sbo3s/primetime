@@ -1,7 +1,16 @@
 <template>
     <u-card class="w-full">
         <template #header>
-        <p class="font-semibold">{{ title }}</p>
+            <div class="flex justify-between">
+                <p class="font-semibold">{{ title }}</p>
+                <u-button
+                    color="blue"
+                    size="2xs"
+                    variant="soft"
+                >
+                    Ver todos
+                </u-button>
+            </div>
         </template>
 
         <template #default>
@@ -11,10 +20,10 @@
                     :key="item.id"
                     class="flex align-middle justify-between text-gray-700"
                 >
-                    <div class="hover:text-purple-700 hover:cursor-pointer">{{ item.name }}</div>
+                    <div class="hover:text-purple-600 hover:cursor-pointer">{{ item.name }}</div>
                     <div
                         class="font-semibold"
-                        :class="item.profit > 0 ? 'text-green-700' : 'text-red-700'"
+                        :class="item.profit > 0 ? 'text-purple-700' : 'text-red-700'"
                     >
                     {{ item.profit }} u</div>
                 </div>
