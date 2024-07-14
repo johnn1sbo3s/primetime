@@ -1,7 +1,7 @@
 <template>
     <u-card class="w-full">
         <template #header>
-        <p class="font-semibold">Resultados de ontem</p>
+        <p class="font-semibold">Métricas</p>
         </template>
 
         <template #default>

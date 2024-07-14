@@ -1,22 +1,55 @@
 <template>
   <div class="flex flex-col gap-5">
     <page-header title="Bem-vindo ao PrimeTime!" />
+    <u-card>
+      <template #header>
+        <p class="font-semibold">Resultados de ontem</p>
+      </template>
 
-    <div class="flex gap-5 w-full">
-      <yesterday-metrics-card
-        :items="metrics"
-      />
+      <div class="flex gap-5 w-full">
+        <yesterday-metrics-card
+          :items="metrics"
+        />
 
-      <ranking-models
-        :title="'Melhores modelos de ontem'"
-        :items="bestModels"
-      />
+        <ranking-models
+          :title="'Top 3 modelos'"
+          :items="bestModels"
+        />
 
-      <ranking-models
-        :title="'Piores modelos de ontem'"
-        :items="worstModels"
-      />
-    </div>
+        <ranking-models
+          :title="'Piores 3 modelos'"
+          :items="worstModels"
+        />
+      </div>
+    </u-card>
+
+    <u-card>
+        <template #header>
+        <p class="font-semibold">Ranking de modelos</p>
+        </template>
+
+        <div class="flex gap-5 w-full">
+          <ranking-models
+            :title="'Profit'"
+            :items="bestModels"
+          />
+
+          <ranking-models
+            :title="'Win Rate'"
+            :items="bestModels"
+          />
+
+          <ranking-models
+            :title="'ROI'"
+            :items="worstModels"
+          />
+
+          <ranking-models
+            :title="'Distância da validação (WR)'"
+            :items="worstModels"
+          />
+        </div>
+    </u-card>
   </div>
 </template>
 
