@@ -122,7 +122,7 @@ const monthMetrics = computed(() => [
 ]);
 
 const top3YesterdayModels = computed(() => {
-  let sorted = filter(yesterdayResults.value).sort((a, b) => {
+  let sorted = _filter(yesterdayResults.value).sort((a, b) => {
     return b.Profit - a.Profit
   }).slice(0, 3);
 
@@ -146,7 +146,7 @@ const top3YesterdayModels = computed(() => {
 })
 
 const top3MonthModels = computed(() => {
-  let sorted = filter(monthResults.value).sort((a, b) => {
+  let sorted = _filter(monthResults.value).sort((a, b) => {
     return b.Profit - a.Profit
   }).slice(0, 3);
 
