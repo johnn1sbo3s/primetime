@@ -23,7 +23,7 @@
 <script setup>
 
 useHead({
-  title: "Primetime - Apostas esportivas",
+  title: "PrimeTime - Apostas Esportivas",
 })
 
 const links = [
