@@ -73,8 +73,6 @@
 </template>
 
 <script setup>
-import { filter } from "lodash";
-
 const today = new Date();
 const day = today.getDate();
 let month = (today.getMonth() + 1) < 10 ? '0' + (today.getMonth() + 1) : (today.getMonth() + 1);
