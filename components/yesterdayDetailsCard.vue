@@ -8,17 +8,17 @@
             <div class="flex flex-col gap-4 text-gray-700">
                 <div class="flex align-middle justify-between">
                     <div>Apostas</div>
-                    <div>{{ numberBets }}</div>
+                    <div class="font-semibold">{{ numberBets }}</div>
                 </div>
 
                 <div class="flex align-middle justify-between">
                     <div>Modelos com apostas</div>
-                    <div>{{ numberModels }}</div>
+                    <div class="font-semibold">{{ numberModels }}</div>
                 </div>
 
                 <div class="flex align-middle justify-between">
                     <div>Modelos positivos</div>
-                    <div>{{ positiveModels }}</div>
+                    <div class="font-semibold">{{ positiveModels }}</div>
                 </div>
             </div>
         </template>

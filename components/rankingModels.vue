@@ -23,9 +23,9 @@
                     <div class="hover:text-purple-600 hover:cursor-pointer">{{ item.name }}</div>
                     <div
                         class="font-semibold"
-                        :class="item.profit > 0 ? 'text-purple-700' : 'text-red-700'"
+                        :class="item.profit > 0 ? 'text-purple-600' : 'text-red-600'"
                     >
-                    {{ item.profit }} u</div>
+                    {{ item.profit.toLocaleString() }} u</div>
                 </div>
             </div>
         </template>

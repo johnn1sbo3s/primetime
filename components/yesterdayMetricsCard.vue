@@ -13,12 +13,12 @@
                 :key="index"
                 class="flex flex-col justify-center"
             >
-                <p class="text-gray-600">{{ item.title }}</p>
+                <p class="text-gray-600">{{ item.name }}</p>
                 <p
                     class="text-2xl font-black"
-                    :class="item.value > 0 ? 'text-purple-700' : 'text-red-700'"
+                    :class="item.value > 0 ? 'text-purple-600' : 'text-red-600'"
                 >
-                    {{ item.value }} {{ item.sufix }}
+                    {{ item.value.toLocaleString() }} {{ item.sufix }}
                 </p>
             </div>
         </div>

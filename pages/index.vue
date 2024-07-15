@@ -8,18 +8,18 @@
 
       <div class="flex gap-5 w-full">
         <yesterday-metrics-card
-          :items="metrics"
+          :items="yesterdayMetrics"
         />
 
         <ranking-models
           :title="'Top 3 modelos'"
-          :items="bestModels"
+          :items="top3YesterdayModels"
         />
 
         <yesterday-details-card
-          number-bets="123"
-          number-models="22"
-          positive-models="15"
+          :number-bets="yesterdayTotal.Num_Bets"
+          :number-models="yesterdayTotal.Method"
+          :positive-models="positiveYesterdayModels"
         />
       </div>
     </u-card>
@@ -31,23 +31,23 @@
 
       <div class="flex gap-5 w-full">
         <yesterday-metrics-card
-          :items="metrics"
+          :items="monthMetrics"
         />
 
         <ranking-models
           :title="'Top 3 modelos'"
-          :items="bestModels"
+          :items="top3MonthModels"
         />
 
         <yesterday-details-card
-          number-bets="2222"
-          number-models="55"
-          positive-models="45"
+          :number-bets="monthTotal.Num_Bets"
+          :number-models="monthTotal.Method"
+          :positive-models="positiveMonthModels"
         />
       </div>
     </u-card>
 
-    <u-card>
+    <!-- <u-card>
         <template #header>
         <p class="font-semibold">Ranking de modelos</p>
         </template>
@@ -68,64 +68,122 @@
             :items="worstModels"
           />
         </div>
-    </u-card>
+    </u-card> -->
   </div>
 </template>
 
 <script setup>
-  const metrics = [
-    {
-      title: "Profit",
-      value: 50.90,
-      sufix: "u",
-    },
-    {
-      title: "Investido",
-      value: 50.90,
-      sufix: "u",
-    },
-    {
-      title: "ROI",
-      value: 0.15,
-      sufix: "",
-    },
-  ];
+import { filter } from "lodash";
 
-  const bestModels = [
+const today = new Date();
+const day = today.getDate();
+let month = (today.getMonth() + 1) < 10 ? '0' + (today.getMonth() + 1) : (today.getMonth() + 1);
+const year = today.getFullYear();
+const yesterday = `${year}-${month}-${day - 1}`;
+
+const { data: yesterdayResults, error: errorYesterdayResults } = await useFetch(`https://primetime-api.onrender.com/daily-results/${yesterday}`);
+const { data: monthResults, error: errorMonthResults } = await useFetch(`https://primetime-api.onrender.com/monthly-results/${month}`);
+
+const yesterdayTotal = _find(yesterdayResults.value, { Date: 'Total' });
+const monthTotal = _find(monthResults.value, { Date: 'Total' });
+
+const yesterdayMetrics = computed(() => [
+  {
+    name: 'Profit',
+    value: yesterdayTotal.Profit,
+    sufix: 'u'
+  },
+  {
+    name: 'Investido',
+    value: yesterdayTotal.Responsibility,
+    sufix: 'u'
+  },
+  {
+    name: 'WR',
+    value: yesterdayTotal.ROI,
+    sufix: ''
+  }
+]);
+
+const monthMetrics = computed(() => [
+  {
+    name: 'Profit',
+    value: monthTotal.Profit,
+    sufix: 'u'
+  },
+  {
+    name: 'Investido',
+    value: monthTotal.Responsibility,
+    sufix: 'u'
+  },
+  {
+    name: 'WR',
+    value: monthTotal.ROI,
+    sufix: ''
+  }
+]);
+
+const top3YesterdayModels = computed(() => {
+  let sorted = filter(yesterdayResults.value).sort((a, b) => {
+    return b.Profit - a.Profit
+  }).slice(0, 3);
+
+  return [
     {
-      id: 1,
-      name: "Back Home V2",
-      profit: 2.5,
+      id: sorted[0].Method_Id,
+      name: sorted[0].Method,
+      profit: sorted[0].Profit,
     },
     {
-      id: 2,
-      name: "Back Home V3",
-      profit: 1.3,
+      id: sorted[1].Method_Id,
+      name: sorted[1].Method,
+      profit: sorted[1].Profit,
     },
     {
-      id: 3,
-      name: "Lay Home V10 Betfair",
-      profit: 5.7,
+      id: sorted[2].Method_Id,
+      name: sorted[2].Method,
+      profit: sorted[2].Profit,
     },
   ]
+})
 
-  const worstModels = [
+const top3MonthModels = computed(() => {
+  let sorted = filter(monthResults.value).sort((a, b) => {
+    return b.Profit - a.Profit
+  }).slice(0, 3);
+
+  return [
     {
-      id: 1,
-      name: "Back Away V8",
-      profit: -5,
+      id: sorted[0].Method_Id,
+      name: sorted[0].Method,
+      profit: sorted[0].Profit,
     },
     {
-      id: 2,
-      name: "BTTS V4",
-      profit: -2,
+      id: sorted[1].Method_Id,
+      name: sorted[1].Method,
+      profit: sorted[1].Profit,
     },
     {
-      id: 3,
-      name: "Lay Home V8 Betfair",
-      profit: 1.3,
+      id: sorted[2].Method_Id,
+      name: sorted[2].Method,
+      profit: sorted[2].Profit,
     },
   ]
+})
+
+const positiveYesterdayModels = computed(() => {
+  let models = _filter(yesterdayResults.value, item => item.Date != 'Total' );
+  let positive = _filter(models, item => item.Profit > 0);
+  return positive.length;
+});
+
+const positiveMonthModels = computed(() => {
+  let models = _filter(monthResults.value, item => item.Date != 'Total' );
+  let positive = _filter(models, item => item.Profit > 0);
+  return positive.length;
+});
+
+
 </script>
 
 <style lang="scss" scoped></style>
