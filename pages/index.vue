@@ -73,14 +73,22 @@
 </template>
 
 <script setup>
-const today = new Date();
-const day = today.getDate();
-let month = (today.getMonth() + 1) < 10 ? '0' + (today.getMonth() + 1) : (today.getMonth() + 1);
-const year = today.getFullYear();
-const yesterday = `${year}-${month}-${day - 1}`;
+import { DateTime } from 'luxon';
 
-const { data: yesterdayResults, error: errorYesterdayResults } = await useFetch(`https://primetime-api.onrender.com/daily-results/${yesterday}`);
-const { data: monthResults, error: errorMonthResults } = await useFetch(`https://primetime-api.onrender.com/monthly-results/${month}`);
+const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd');
+const month = DateTime.now().toFormat('M');
+const dayBeforeYersterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
+let limit = DateTime.now().set({ hour: 10, minute: 15, second: 0, millisecond: 0 });
+const isAfterTime = DateTime.now() > limit ? true : false;
+
+let requisitionUrl = `https://primetime-api.onrender.com/daily-results/${dayBeforeYersterday}`;
+
+if (isAfterTime) {
+  requisitionUrl = `https://primetime-api.onrender.com/daily-results/${yesterday}`;
+}
+
+const { data: yesterdayResults } = await useFetch(requisitionUrl);
+const { data: monthResults } = await useFetch(`https://primetime-api.onrender.com/monthly-results/${month}`);
 
 const yesterdayTotal = _find(yesterdayResults.value, { Date: 'Total' });
 const monthTotal = _find(monthResults.value, { Date: 'Total' });
