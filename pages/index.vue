@@ -130,7 +130,8 @@ const monthMetrics = computed(() => [
 ]);
 
 const top3YesterdayModels = computed(() => {
-  let sorted = _filter(yesterdayResults.value).sort((a, b) => {
+  let removedLast = yesterdayResults.value.slice(0, -1);
+  let sorted = _filter(removedLast).sort((a, b) => {
     return b.Profit - a.Profit
   }).slice(0, 3);
 
@@ -154,7 +155,8 @@ const top3YesterdayModels = computed(() => {
 })
 
 const top3MonthModels = computed(() => {
-  let sorted = _filter(monthResults.value).sort((a, b) => {
+  let removedLast = monthResults.value.slice(0, -1);
+  let sorted = _filter(removedLast).sort((a, b) => {
     return b.Profit - a.Profit
   }).slice(0, 3);
 
