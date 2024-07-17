@@ -46,29 +46,6 @@
         />
       </div>
     </u-card>
-
-    <!-- <u-card>
-        <template #header>
-        <p class="font-semibold">Ranking de modelos</p>
-        </template>
-
-        <div class="flex gap-5 w-full">
-          <ranking-models
-            :title="'Profit'"
-            :items="bestModels"
-          />
-
-          <ranking-models
-            :title="'ROI'"
-            :items="worstModels"
-          />
-
-          <ranking-models
-            :title="'Distância da validação (WR)'"
-            :items="worstModels"
-          />
-        </div>
-    </u-card> -->
   </div>
 </template>
 
