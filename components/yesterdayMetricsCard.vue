@@ -13,7 +13,7 @@
                 :key="index"
                 class="flex flex-col justify-center"
             >
-                <p class="text-gray-600">{{ item.name }}</p>
+                <p>{{ item.name }}</p>
                 <p
                     class="text-2xl font-black"
                     :class="item.value >= 0 ? 'text-purple-600' : 'text-red-600'"
@@ -25,7 +25,7 @@
         </template>
 
         <template #footer>
-        <p class="text-xs text-gray-500">u = Unidade</p>
+        <p class="text-xs">u = Unidade</p>
         </template>
     </u-card>
 

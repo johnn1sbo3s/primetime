@@ -43,7 +43,7 @@ const links = [
     {
       label: "Dashboard",
       icon: "i-heroicons-squares-2x2",
-      to: "/",
+      to: "/dashboard",
     },
     {
       label: "Apostas do dia",
