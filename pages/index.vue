@@ -42,7 +42,7 @@ onMounted(() => {
         router.push({ path: "/dashboard" });
       }
     });
-  }, 3000); // Atraso de 5 segundos antes de fazer a requisição
+  }, 3000);
 });
 
 onUnmounted(() => {
