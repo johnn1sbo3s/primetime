@@ -105,7 +105,7 @@ const yesterdayMetrics = computed(() => [
     sufix: 'u'
   },
   {
-    name: 'WR',
+    name: 'ROI',
     value: yesterdayTotal.ROI,
     sufix: ''
   }
@@ -123,7 +123,7 @@ const monthMetrics = computed(() => [
     sufix: 'u'
   },
   {
-    name: 'WR',
+    name: 'ROI',
     value: monthTotal.ROI,
     sufix: ''
   }
