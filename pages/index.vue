@@ -1,22 +1,15 @@
 <template>
-    <div
-        v-if="formattedTime === '0:00' || data"
-        class="w-full h-full flex flex-col gap-2 justify-center items-center bg-gray-300 fixed z-50 left-0 top-0 text-gray-800 text-3xl"
-    >
-        <p>Pode passar!</p>
-    </div>
-
-    <div
-        v-else
-        class="w-full h-full flex flex-col gap-2 justify-center items-center bg-purple-950 fixed z-50 left-0 top-0 text-gray-100 text-3xl"
-    >
-        <p>Por favor, aguarde a máquina começar a girar!</p>
-        <p>Tempo restante: {{ formattedTime }}</p>
-    </div>
+  <div
+      class="w-full h-full flex flex-col gap-2 justify-center items-center bg-purple-950 fixed z-50 left-0 top-0 text-gray-100 text-3xl"
+  >
+      <p>Por favor, aguarde! O time está no aquecimento.</p>
+      <p>Estará disponível em até: {{ formattedTime }}</p>
+  </div>
 </template>
 
 <script setup>
-const { data, status } = await useFetch("https://primetime-api.onrender.com");
+const router = useRouter();
+const { data, status } = await useLazyFetch("https://primetime-api.onrender.com");
 
 const countdownTime = ref(50); // Duração da contagem regressiva em segundos
 const formattedTime = ref('');
@@ -43,6 +36,12 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearInterval(intervalId);
+});
+
+watchEffect(() => {
+  if (status.value === 'success') {
+    router.push({ path: "/dashboard" });
+  }
 });
 
 </script>
