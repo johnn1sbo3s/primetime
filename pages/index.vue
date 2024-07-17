@@ -9,8 +9,8 @@
 
 <script setup>
 const router = useRouter();
-
-const { data, status } = await useLazyFetch("https://primetime-api.onrender.com");
+const route = useRoute();
+const status = ref('pending');
 
 const countdownTime = ref(50); // Duração da contagem regressiva em segundos
 const formattedTime = ref('');
@@ -35,14 +35,10 @@ onMounted(() => {
   intervalId = setInterval(updateCountdown, 1000);
 
   setTimeout(async () => {
-    const { data, status } = await useLazyFetch("https://primetime-api.onrender.com");
-    watchEffect(() => {
-      if (status.value === 'success') {
-        loading.value = false;
-        router.push({ path: "/dashboard" });
-      }
+    useLazyFetch("https://primetime-api.onrender.com", { timeout: 60000 }).then(( response ) => {
+      status.value = response.status.value;
     });
-  }, 3000);
+  }, 1000);
 });
 
 onUnmounted(() => {
@@ -50,7 +46,8 @@ onUnmounted(() => {
 });
 
 watchEffect(() => {
-  if (status.value === 'success') {
+  if (route.path === '/' && status.value === 'success') {
+    console.log('adfafdaf', route.path);
     router.push({ path: "/dashboard" });
   }
 });
