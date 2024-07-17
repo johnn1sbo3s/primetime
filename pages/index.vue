@@ -9,6 +9,7 @@
 
 <script setup>
 const router = useRouter();
+
 const { data, status } = await useLazyFetch("https://primetime-api.onrender.com");
 
 const countdownTime = ref(50); // Duração da contagem regressiva em segundos
@@ -32,6 +33,16 @@ let intervalId;
 onMounted(() => {
   formattedTime.value = formatTime(countdownTime.value);
   intervalId = setInterval(updateCountdown, 1000);
+
+  setTimeout(async () => {
+    const { data, status } = await useLazyFetch("https://primetime-api.onrender.com");
+    watchEffect(() => {
+      if (status.value === 'success') {
+        loading.value = false;
+        router.push({ path: "/dashboard" });
+      }
+    });
+  }, 3000); // Atraso de 5 segundos antes de fazer a requisição
 });
 
 onUnmounted(() => {
