@@ -5,7 +5,7 @@
         </template>
 
         <template #default>
-            <div class="flex flex-col gap-4 text-gray-700">
+            <div class="flex flex-col gap-4">
                 <div class="flex align-middle justify-between">
                     <div>Apostas</div>
                     <div class="font-semibold">{{ numberBets }}</div>

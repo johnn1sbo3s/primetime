@@ -18,7 +18,7 @@
                 <div
                     v-for="item in items"
                     :key="item.id"
-                    class="flex align-middle justify-between text-gray-700"
+                    class="flex align-middle justify-between"
                 >
                     <div class="hover:text-purple-600 hover:cursor-pointer">{{ item.name }}</div>
                     <div
