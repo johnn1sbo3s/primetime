@@ -47,7 +47,6 @@ onUnmounted(() => {
 
 watchEffect(() => {
   if (route.path === '/' && status.value === 'success') {
-    console.log('adfafdaf', route.path);
     router.push({ path: "/dashboard" });
   }
 });
