@@ -14,6 +14,7 @@
         <ranking-models
           :title="'Top 3 modelos'"
           :items="top3YesterdayModels"
+          :all-results-data="yesterdayResults"
         />
 
         <yesterday-details-card
@@ -37,6 +38,7 @@
         <ranking-models
           :title="'Top 3 modelos'"
           :items="top3MonthModels"
+          :all-results-data="monthResults"
         />
 
         <yesterday-details-card

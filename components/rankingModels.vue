@@ -7,6 +7,7 @@
                     color="blue"
                     size="2xs"
                     variant="soft"
+                    @click="isModalOpen = true"
                 >
                     Ver todos
                 </u-button>
@@ -31,9 +32,35 @@
         </template>
     </u-card>
 
+    <u-modal
+        v-model="isModalOpen"
+    >
+        <div class="flex justify-center">
+            <u-card
+                class="w-fit"
+            >
+                <template #header>
+                    <p class="font-semibold">{{ title }}</p>
+                </template>
+
+                <template #default>
+                    <u-table
+                        :rows="allResultsData"
+                        :columns="columns"
+                        :ui="{
+                            wrapper:
+                                'relative overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-lg',
+                        }"
+                    />
+                </template>
+            </u-card>
+        </div>
+    </u-modal>
+
 </template>
 
 <script setup>
+
 defineProps({
     items: {
         type: Array,
@@ -44,8 +71,24 @@ defineProps({
         type: String,
         required: true,
         default: () => ""
+    },
+    allResultsData: {
+        type: Array,
+        required: true,
+        default: () => []
     }
 })
+
+const isModalOpen = ref(false);
+
+const columns = [
+    { key: "Date", label: "Data", sortable: false },
+    { key: "Method", label: "Modelo", sortable: false },
+    { key: "Profit", label: "Lucro", sortable: false },
+    { key: "ROI", label: "ROI", sortable: false },
+    { key: "Responsibility", label: "Investido", sortable: false },
+    { key: "Num_Bets", label: "Qtd de apostas", sortable: false },
+];
 </script>
 
 <style>
