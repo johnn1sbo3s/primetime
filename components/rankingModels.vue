@@ -45,7 +45,8 @@
 
                 <template #default>
                     <u-table
-                        :rows="allResultsData"
+                        style="width: 45dvw;"
+                        :rows="sanitizedAllResultsData"
                         :columns="columns"
                         :ui="{
                             wrapper:
@@ -60,8 +61,7 @@
 </template>
 
 <script setup>
-
-defineProps({
+const props = defineProps({
     items: {
         type: Array,
         required: true,
@@ -80,7 +80,6 @@ defineProps({
 })
 
 const isModalOpen = ref(false);
-
 const columns = [
     { key: "Date", label: "Data", sortable: false },
     { key: "Method", label: "Modelo", sortable: false },
@@ -89,6 +88,18 @@ const columns = [
     { key: "Responsibility", label: "Investido", sortable: false },
     { key: "Num_Bets", label: "Qtd de apostas", sortable: false },
 ];
+
+const sanitizedAllResultsData = computed(() => {
+    return props.allResultsData.map(item => {
+        return {
+            ...item,
+            Profit: item.Profit.toLocaleString('pt-BR'),
+            ROI: item.ROI.toLocaleString('pt-BR'),
+            Num_Bets: item.Num_Bets.toLocaleString('pt-BR')
+        };
+    });
+});
+
 </script>
 
 <style>

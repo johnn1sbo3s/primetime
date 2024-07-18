@@ -2,7 +2,7 @@
   <div
       class="w-full h-full flex flex-col gap-2 justify-center items-center bg-purple-950 fixed z-50 left-0 top-0 text-gray-100 text-3xl"
   >
-      <p>Por favor, aguarde! O time está no aquecimento.</p>
+      <p>O time está no aquecimento.</p>
       <p>Estará disponível em até: {{ formattedTime }}</p>
   </div>
 </template>
