@@ -3,7 +3,7 @@
     <page-header title="Bem-vindo ao PrimeTime!" />
     <u-card>
       <template #header>
-        <p class="font-semibold">Resultados de ontem</p>
+        <p class="font-semibold">{{ isAfterTime ? 'Resultados de ontem' : 'Resultados de anteontem'}}</p>
       </template>
 
       <div class="flex gap-5 w-full">
@@ -14,6 +14,7 @@
         <ranking-models
           :title="'Top 3 modelos'"
           :items="top3YesterdayModels"
+          :all-results-data="yesterdayResults"
         />
 
         <yesterday-details-card
@@ -37,6 +38,7 @@
         <ranking-models
           :title="'Top 3 modelos'"
           :items="top3MonthModels"
+          :all-results-data="monthResults"
         />
 
         <yesterday-details-card
@@ -46,29 +48,6 @@
         />
       </div>
     </u-card>
-
-    <!-- <u-card>
-        <template #header>
-        <p class="font-semibold">Ranking de modelos</p>
-        </template>
-
-        <div class="flex gap-5 w-full">
-          <ranking-models
-            :title="'Profit'"
-            :items="bestModels"
-          />
-
-          <ranking-models
-            :title="'ROI'"
-            :items="worstModels"
-          />
-
-          <ranking-models
-            :title="'Distância da validação (WR)'"
-            :items="worstModels"
-          />
-        </div>
-    </u-card> -->
   </div>
 </template>
 
