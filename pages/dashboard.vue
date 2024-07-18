@@ -3,7 +3,7 @@
     <page-header title="Bem-vindo ao PrimeTime!" />
     <u-card>
       <template #header>
-        <p class="font-semibold">Resultados de ontem</p>
+        <p class="font-semibold">{{ isAfterTime ? 'Resultados de ontem' : 'Resultados de anteontem'}}</p>
       </template>
 
       <div class="flex gap-5 w-full">
