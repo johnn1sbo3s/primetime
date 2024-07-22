@@ -14,4 +14,10 @@ export default defineNuxtConfig({
       ["isDate", "isLodashDate"], // => _isLodashDate
     ],
   },
+
+  runtimeConfig: {
+    public: {
+      API_URL: process.env.API_URL || 'https://primetime-api.onrender.com/',
+    },
+  }
 });

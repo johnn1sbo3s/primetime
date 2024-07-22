@@ -10,6 +10,8 @@
 <script setup>
 const router = useRouter();
 const route = useRoute();
+const runtimeConfig = useRuntimeConfig();
+const apiUrl = runtimeConfig.public.API_URL;
 const status = ref('pending');
 
 const countdownTime = ref(50); // Duração da contagem regressiva em segundos
@@ -35,7 +37,7 @@ onMounted(() => {
   intervalId = setInterval(updateCountdown, 1000);
 
   setTimeout(async () => {
-    useLazyFetch("https://primetime-api.onrender.com", { timeout: 60000 }).then(( response ) => {
+    useLazyFetch(`${apiUrl}`, { timeout: 60000 }).then(( response ) => {
       status.value = response.status.value;
     });
   }, 1000);
