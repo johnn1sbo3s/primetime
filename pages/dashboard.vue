@@ -3,6 +3,16 @@
     <page-header title="Bem-vindo ao PrimeTime!" />
     <u-card>
       <template #header>
+        <p class="font-semibold">Evolução da banca</p>
+      </template>
+
+      <div class="w-full">
+        <bankroll-evolution />
+      </div>
+    </u-card>
+
+    <u-card>
+      <template #header>
         <p class="font-semibold">{{ isAfterTime ? 'Resultados de ontem' : 'Resultados de anteontem'}}</p>
       </template>
 
@@ -54,20 +64,23 @@
 <script setup>
 import { DateTime } from 'luxon';
 
+const runtimeConfig = useRuntimeConfig();
+const apiUrl = runtimeConfig.public.API_URL;
+
 const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd');
 const month = DateTime.now().toFormat('M');
 const dayBeforeYersterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
 let limit = DateTime.now().set({ hour: 10, minute: 15, second: 0, millisecond: 0 });
 const isAfterTime = DateTime.now() > limit ? true : false;
 
-let requisitionUrl = `https://primetime-api.onrender.com/daily-results/${dayBeforeYersterday}`;
+let requisitionUrl = `${apiUrl}/daily-results/${dayBeforeYersterday}`;
 
 if (isAfterTime) {
-  requisitionUrl = `https://primetime-api.onrender.com/daily-results/${yesterday}`;
+  requisitionUrl = `${apiUrl}/daily-results/${yesterday}`;
 }
 
 const { data: yesterdayResults } = await useFetch(requisitionUrl);
-const { data: monthResults } = await useFetch(`https://primetime-api.onrender.com/monthly-results/${month}`);
+const { data: monthResults } = await useFetch(`${apiUrl}/monthly-results/${month}`);
 
 const yesterdayTotal = _find(yesterdayResults.value, { Date: 'Total' });
 const monthTotal = _find(monthResults.value, { Date: 'Total' });
