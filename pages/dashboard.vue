@@ -1,13 +1,28 @@
 <template>
   <div class="flex flex-col gap-5">
-    <page-header title="Bem-vindo ao PrimeTime!" />
+    <div class="flex justify-between items-end">
+      <page-header title="Bem-vindo ao PrimeTime!" />
+      <div class="flex gap-2">
+        <div class="inline-block align-middle">
+          <UToggle
+            size="lg"
+            on-icon="i-heroicons-check-20-solid"
+            off-icon="i-heroicons-x-mark-20-solid"
+            :model-value="onlyChosenModels"
+            @click="onlyChosenModels = !onlyChosenModels"
+          />
+        </div>
+        <p>Apenas modelos selecionados</p>
+      </div>
+    </div>
+
     <u-card>
       <template #header>
         <p class="font-semibold">Evolução da banca</p>
       </template>
 
       <div class="w-full">
-        <bankroll-evolution />
+        <bankroll-evolution :model-value="onlyChosenModels" />
       </div>
     </u-card>
 
@@ -72,6 +87,7 @@ const month = DateTime.now().toFormat('M');
 const dayBeforeYersterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
 let limit = DateTime.now().set({ hour: 10, minute: 15, second: 0, millisecond: 0 });
 const isAfterTime = DateTime.now() > limit ? true : false;
+const onlyChosenModels = ref(true);
 
 let requisitionUrl = `${apiUrl}/daily-results/${dayBeforeYersterday}`;
 
@@ -79,26 +95,35 @@ if (isAfterTime) {
   requisitionUrl = `${apiUrl}/daily-results/${yesterday}`;
 }
 
-const { data: yesterdayResults } = await useFetch(requisitionUrl);
-const { data: monthResults } = await useFetch(`${apiUrl}/monthly-results/${month}`);
+const { data: yesterdayResults } = await useFetch(requisitionUrl, {
+  params: {
+    filtered: onlyChosenModels,
+  }
+});
 
-const yesterdayTotal = _find(yesterdayResults.value, { Date: 'Total' });
-const monthTotal = _find(monthResults.value, { Date: 'Total' });
+const { data: monthResults } = await useFetch(`${apiUrl}/monthly-results/${month}`, {
+  params: {
+    filtered: onlyChosenModels,
+  }
+});
+
+const yesterdayTotal = computed(() => _find(yesterdayResults.value, { Date: 'Total' }));
+const monthTotal = computed(() => _find(monthResults.value, { Date: 'Total' }));
 
 const yesterdayMetrics = computed(() => [
   {
     name: 'Profit',
-    value: yesterdayTotal.Profit,
+    value: yesterdayTotal.value.Profit,
     sufix: 'u'
   },
   {
     name: 'Investido',
-    value: yesterdayTotal.Responsibility,
+    value: yesterdayTotal.value.Responsibility,
     sufix: 'u'
   },
   {
     name: 'ROI',
-    value: yesterdayTotal.ROI,
+    value: yesterdayTotal.value.ROI,
     sufix: ''
   }
 ]);
@@ -106,17 +131,17 @@ const yesterdayMetrics = computed(() => [
 const monthMetrics = computed(() => [
   {
     name: 'Profit',
-    value: monthTotal.Profit,
+    value: monthTotal.value.Profit,
     sufix: 'u'
   },
   {
     name: 'Investido',
-    value: monthTotal.Responsibility,
+    value: monthTotal.value.Responsibility,
     sufix: 'u'
   },
   {
     name: 'ROI',
-    value: monthTotal.ROI,
+    value: monthTotal.value.ROI,
     sufix: ''
   }
 ]);
@@ -182,7 +207,6 @@ const positiveMonthModels = computed(() => {
   let positive = _filter(models, item => item.Profit > 0);
   return positive.length;
 });
-
 
 </script>
 
