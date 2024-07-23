@@ -50,6 +50,14 @@
 import { Chart, registerables } from "chart.js";
 import { LineChart } from "vue-chart-3";
 
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    required: true,
+    default: () => true
+  }
+})
+
 const runtimeConfig = useRuntimeConfig();
 const apiUrl = runtimeConfig.public.API_URL;
 
@@ -118,8 +126,12 @@ const chartStyle = ref({
   width: "100%",
 });
 
-const { data: bankrollData, pending } = await useLazyFetch(`${apiUrl}/bankroll-evolution`, {
+const { data: bankrollData, pending } = await useLazyFetch(`${apiUrl}/bankroll-evolution`,
+{
     server: false,
+    params: {
+        filtered: props.modelValue,
+    }
 });
 
 const chartData = computed(() => {
@@ -144,7 +156,6 @@ const chartData = computed(() => {
 })
 
 const resultsByMonth = computed(() => {
-    // list of objects with month and profit
     let removedInitialMonth = bankrollData.value.slice(1);
     let months = removedInitialMonth.map((item) => {
         return {
@@ -155,6 +166,14 @@ const resultsByMonth = computed(() => {
 
     return months.reverse();
 })
+
+watchEffect(async () => {
+    bankrollData.value = await $fetch(`${apiUrl}/bankroll-evolution`, {
+      params: {
+        filtered: props.modelValue,
+      }
+    })
+});
 
 </script>
 

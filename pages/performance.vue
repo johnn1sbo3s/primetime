@@ -144,6 +144,9 @@ import { ref } from "vue";
 import { Chart, registerables } from "chart.js";
 import { LineChart } from "vue-chart-3";
 
+const runtimeConfig = useRuntimeConfig();
+const apiUrl = runtimeConfig.public.API_URL;
+
 if (process.client) {
   const zoomPlugin = (await import("chartjs-plugin-zoom")).default;
   const annotationPlugin = (await import("chartjs-plugin-annotation")).default;
@@ -302,11 +305,9 @@ const changeChartByDay = () => {
 };
 
 // Pega os dados da API
-const performanceData = await fetchData(
-  "https://primetime-api.onrender.com/model-performance"
-);
+const performanceData = await fetchData(`${apiUrl}/model-performance`);
 
-betsData.value = await fetchData("https://primetime-api.onrender.com/model-bets");
+betsData.value = await fetchData(`${apiUrl}/model-bets`);
 
 Object.values(performanceData).forEach((item) => {
   let name = item.modelo;
