@@ -35,7 +35,7 @@
 
     <u-card v-else>
       <template #header>
-        <p class="font-semibold">{{ !error ? `Resultados de ontem - ${formatDate(yesterday)}` : `Resultados de anteontem - ${formatDate(dayBeforeYersterday)}`}}</p>
+        <p class="font-semibold">{{ !yesterdayDataError ? `Resultados de ontem - ${formatDate(yesterday)}` : `Resultados de anteontem - ${formatDate(dayBeforeYersterday)}`}}</p>
       </template>
 
       <div class="flex gap-5 w-full">
@@ -99,23 +99,19 @@ const month = DateTime.now().toFormat('M');
 const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd');
 const dayBeforeYersterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
 const onlyChosenModels = ref(true);
-const yesterdayResults = ref({});
-const monthResults = ref({});
 
-const { data: yesterdayData, pending, error } = await useLazyFetch(`${apiUrl}/daily-results/${yesterday}`, {
+const { data: yesterdayData, pending, error: yesterdayDataError } = await useFetch(`${apiUrl}/daily-results/${yesterday}`, {
   params: {
     filtered: onlyChosenModels,
   },
 });
-yesterdayResults.value = yesterdayData.value;
 
-if (yesterdayResults.value == null) {
-  const { data: yesterdayData, pending } = await useLazyFetch(`${apiUrl}/daily-results/${dayBeforeYersterday}`, {
+if (yesterdayData.value == null) {
+  const { data: yesterdayData, pending } = await useFetch(`${apiUrl}/daily-results/${dayBeforeYersterday}`, {
     params: {
       filtered: onlyChosenModels,
     },
   });
-  yesterdayResults.value = yesterdayData.value;
 };
 
 const { data: monthData } = await useFetch(`${apiUrl}/monthly-results/${month}`, {
@@ -124,7 +120,13 @@ const { data: monthData } = await useFetch(`${apiUrl}/monthly-results/${month}`,
   },
 });
 
-monthResults.value = monthData.value;
+const yesterdayResults = computed( () => {
+  return yesterdayData.value;
+});
+
+const monthResults = computed( () => {
+  return monthData.value;
+});
 
 const yesterdayTotal = computed(() => _find(yesterdayResults.value, { Date: 'Total' }));
 const monthTotal = computed(() => _find(monthResults.value, { Date: 'Total' }));
