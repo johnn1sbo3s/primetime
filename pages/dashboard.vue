@@ -98,7 +98,7 @@ const apiUrl = runtimeConfig.public.API_URL;
 const month = DateTime.now().toFormat('M');
 const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd');
 const dayBeforeYesterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
-const onlyChosenModels = ref(false);
+const onlyChosenModels = ref(true);
 
 const { data: yesterdayData, pending: yesterdayDataPending, error: yesterdayDataError } = await useFetch(`${apiUrl}/daily-results/${yesterday}`, {
   params: {
