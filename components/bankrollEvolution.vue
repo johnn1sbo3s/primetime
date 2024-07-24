@@ -168,11 +168,15 @@ const resultsByMonth = computed(() => {
 })
 
 watchEffect(async () => {
-    bankrollData.value = await $fetch(`${apiUrl}/bankroll-evolution`, {
-      params: {
-        filtered: props.modelValue,
-      }
-    })
+  pending.value = true;
+
+  bankrollData.value = await $fetch(`${apiUrl}/bankroll-evolution`, {
+    params: {
+      filtered: props.modelValue,
+    }
+  })
+
+  pending.value = false;
 });
 
 </script>

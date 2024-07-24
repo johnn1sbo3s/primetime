@@ -8,10 +8,12 @@
             size="lg"
             on-icon="i-heroicons-check-20-solid"
             off-icon="i-heroicons-x-mark-20-solid"
+            :loading="pending"
             :model-value="onlyChosenModels"
             @click="onlyChosenModels = !onlyChosenModels"
           />
         </div>
+
         <p>Apenas modelos selecionados</p>
       </div>
     </div>
@@ -26,7 +28,12 @@
       </div>
     </u-card>
 
-    <u-card>
+    <u-skeleton
+      v-if="pending"
+      class="w-full h-[330px]"
+    />
+
+    <u-card v-else>
       <template #header>
         <p class="font-semibold">{{ isAfterTime ? 'Resultados de ontem' : 'Resultados de anteontem'}}</p>
       </template>
@@ -50,7 +57,12 @@
       </div>
     </u-card>
 
-    <u-card>
+    <u-skeleton
+      v-if="pending"
+      class="w-full h-[330px]"
+    />
+
+    <u-card v-else>
       <template #header>
         <p class="font-semibold">Resultados do mês</p>
       </template>
@@ -95,7 +107,7 @@ if (isAfterTime) {
   requisitionUrl = `${apiUrl}/daily-results/${yesterday}`;
 }
 
-const { data: yesterdayResults } = await useFetch(requisitionUrl, {
+const { data: yesterdayResults, pending } = await useLazyFetch(requisitionUrl, {
   params: {
     filtered: onlyChosenModels,
   }
