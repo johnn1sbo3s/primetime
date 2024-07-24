@@ -35,7 +35,7 @@
 
     <u-card v-else>
       <template #header>
-        <p class="font-semibold">{{ !error ? 'Resultados de ontem' : 'Resultados de anteontem'}}</p>
+        <p class="font-semibold">{{ !error ? `Resultados de ontem - ${formatDate(yesterday)}` : `Resultados de anteontem - ${formatDate(dayBeforeYersterday)}`}}</p>
       </template>
 
       <div class="flex gap-5 w-full">
@@ -90,6 +90,7 @@
 
 <script setup>
 import { DateTime } from 'luxon';
+import { formatDate } from '~/utils/formatDate';
 
 const runtimeConfig = useRuntimeConfig();
 const apiUrl = runtimeConfig.public.API_URL;
