@@ -29,13 +29,13 @@
     </u-card>
 
     <u-skeleton
-      v-if="pending"
+      v-if="yesterdayDataPending"
       class="w-full h-[330px]"
     />
 
     <u-card v-else>
       <template #header>
-        <p class="font-semibold">{{ !yesterdayDataError ? `Resultados de ontem - ${formatDate(yesterday)}` : `Resultados de anteontem - ${formatDate(dayBeforeYersterday)}`}}</p>
+        <p class="font-semibold">{{ !yesterdayDataError ? `Resultados de ontem - ${formatDate(yesterday)}` : `Resultados de anteontem - ${formatDate(dayBeforeYesterday)}`}}</p>
       </template>
 
       <div class="flex gap-5 w-full">
@@ -58,7 +58,7 @@
     </u-card>
 
     <u-skeleton
-      v-if="pending"
+      v-if="monthDataPending"
       class="w-full h-[330px]"
     />
 
@@ -97,75 +97,83 @@ const apiUrl = runtimeConfig.public.API_URL;
 
 const month = DateTime.now().toFormat('M');
 const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd');
-const dayBeforeYersterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
-const onlyChosenModels = ref(true);
+const dayBeforeYesterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
+const onlyChosenModels = ref(false);
 
-const { data: yesterdayData, pending, error: yesterdayDataError } = await useFetch(`${apiUrl}/daily-results/${yesterday}`, {
+const { data: yesterdayData, pending: yesterdayDataPending, error: yesterdayDataError } = await useFetch(`${apiUrl}/daily-results/${yesterday}`, {
   params: {
     filtered: onlyChosenModels,
   },
 });
 
-if (yesterdayData.value == null) {
-  const { data: yesterdayData, pending } = await useFetch(`${apiUrl}/daily-results/${dayBeforeYersterday}`, {
-    params: {
-      filtered: onlyChosenModels,
-    },
-  });
-};
+const { data: dayBeforeYesterdayData } = await useFetch(`${apiUrl}/daily-results/${dayBeforeYesterday}`, {
+  params: {
+    filtered: onlyChosenModels,
+  },
+})
 
-const { data: monthData } = await useFetch(`${apiUrl}/monthly-results/${month}`, {
+const { data: monthData, pending: monthDataPending } = await useFetch(`${apiUrl}/monthly-results/${month}`, {
+  lazy: false,
   params: {
     filtered: onlyChosenModels,
   },
 });
 
-const yesterdayResults = computed( () => {
-  return yesterdayData.value;
+const yesterdayResults = computed(() => {
+  return yesterdayData?.value ? yesterdayData.value : dayBeforeYesterdayData.value;
 });
 
 const monthResults = computed( () => {
   return monthData.value;
 });
 
-const yesterdayTotal = computed(() => _find(yesterdayResults.value, { Date: 'Total' }));
-const monthTotal = computed(() => _find(monthResults.value, { Date: 'Total' }));
+const yesterdayTotal = computed(() => {
+  return _find(yesterdayResults.value, { Date: 'Total' });
+})
 
-const yesterdayMetrics = computed(() => [
-  {
-    name: 'Profit',
-    value: yesterdayTotal.value.Profit,
-    sufix: 'u'
-  },
-  {
-    name: 'Investido',
-    value: yesterdayTotal.value.Responsibility,
-    sufix: 'u'
-  },
-  {
-    name: 'ROI',
-    value: yesterdayTotal.value.ROI,
-    sufix: ''
-  }
-]);
+const monthTotal = computed(() => {
+  return _find(monthResults.value, { Date: 'Total' });
+})
 
-const monthMetrics = computed(() => [
-  {
-    name: 'Profit',
-    value: monthTotal.value.Profit,
-    sufix: 'u'
-  },
-  {
-    name: 'Investido',
-    value: monthTotal.value.Responsibility,
-    sufix: 'u'
-  },
-  {
-    name: 'ROI',
-    value: monthTotal.value.ROI,
-    sufix: ''
-  }
-]);
+const yesterdayMetrics = computed(() => {
+  return [
+    {
+      name: 'Profit',
+      value: yesterdayTotal.value.Profit,
+      sufix: 'u'
+    },
+    {
+      name: 'Investido',
+      value: yesterdayTotal.value.Responsibility,
+      sufix: 'u'
+    },
+    {
+      name: 'ROI',
+      value: yesterdayTotal.value.ROI,
+      sufix: ''
+    }
+  ]
+});
+
+const monthMetrics = computed(() => {
+  return [
+    {
+      name: 'Profit',
+      value: monthTotal.value.Profit,
+      sufix: 'u'
+    },
+    {
+      name: 'Investido',
+      value: monthTotal.value.Responsibility,
+      sufix: 'u'
+    },
+    {
+      name: 'ROI',
+      value: monthTotal.value.ROI,
+      sufix: ''
+    }
+  ]
+});
 
 const top3YesterdayModels = computed(() => {
   let removedLast = yesterdayResults.value.slice(0, -1);
