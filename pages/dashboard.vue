@@ -8,10 +8,12 @@
             size="lg"
             on-icon="i-heroicons-check-20-solid"
             off-icon="i-heroicons-x-mark-20-solid"
+            :loading="pending"
             :model-value="onlyChosenModels"
             @click="onlyChosenModels = !onlyChosenModels"
           />
         </div>
+
         <p>Apenas modelos selecionados</p>
       </div>
     </div>
@@ -26,9 +28,14 @@
       </div>
     </u-card>
 
-    <u-card>
+    <u-skeleton
+      v-if="yesterdayDataPending"
+      class="w-full h-[330px]"
+    />
+
+    <u-card v-else>
       <template #header>
-        <p class="font-semibold">{{ isAfterTime ? 'Resultados de ontem' : 'Resultados de anteontem'}}</p>
+        <p class="font-semibold">{{ !yesterdayDataError ? `Resultados de ontem - ${formatDate(yesterday)}` : `Resultados de anteontem - ${formatDate(dayBeforeYesterday)}`}}</p>
       </template>
 
       <div class="flex gap-5 w-full">
@@ -50,7 +57,12 @@
       </div>
     </u-card>
 
-    <u-card>
+    <u-skeleton
+      v-if="monthDataPending"
+      class="w-full h-[330px]"
+    />
+
+    <u-card v-else>
       <template #header>
         <p class="font-semibold">Resultados do mês</p>
       </template>
@@ -78,73 +90,90 @@
 
 <script setup>
 import { DateTime } from 'luxon';
+import { formatDate } from '~/utils/formatDate';
 
 const runtimeConfig = useRuntimeConfig();
 const apiUrl = runtimeConfig.public.API_URL;
 
-const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd');
 const month = DateTime.now().toFormat('M');
-const dayBeforeYersterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
-let limit = DateTime.now().set({ hour: 10, minute: 15, second: 0, millisecond: 0 });
-const isAfterTime = DateTime.now() > limit ? true : false;
+const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd');
+const dayBeforeYesterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
 const onlyChosenModels = ref(true);
 
-let requisitionUrl = `${apiUrl}/daily-results/${dayBeforeYersterday}`;
-
-if (isAfterTime) {
-  requisitionUrl = `${apiUrl}/daily-results/${yesterday}`;
-}
-
-const { data: yesterdayResults } = await useFetch(requisitionUrl, {
+const { data: yesterdayData, pending: yesterdayDataPending, error: yesterdayDataError } = await useFetch(`${apiUrl}/daily-results/${yesterday}`, {
   params: {
     filtered: onlyChosenModels,
-  }
+  },
 });
 
-const { data: monthResults } = await useFetch(`${apiUrl}/monthly-results/${month}`, {
+const { data: dayBeforeYesterdayData } = await useFetch(`${apiUrl}/daily-results/${dayBeforeYesterday}`, {
   params: {
     filtered: onlyChosenModels,
-  }
+  },
+})
+
+const { data: monthData, pending: monthDataPending } = await useFetch(`${apiUrl}/monthly-results/${month}`, {
+  lazy: false,
+  params: {
+    filtered: onlyChosenModels,
+  },
 });
 
-const yesterdayTotal = computed(() => _find(yesterdayResults.value, { Date: 'Total' }));
-const monthTotal = computed(() => _find(monthResults.value, { Date: 'Total' }));
+const yesterdayResults = computed(() => {
+  return yesterdayData?.value ? yesterdayData.value : dayBeforeYesterdayData.value;
+});
 
-const yesterdayMetrics = computed(() => [
-  {
-    name: 'Profit',
-    value: yesterdayTotal.value.Profit,
-    sufix: 'u'
-  },
-  {
-    name: 'Investido',
-    value: yesterdayTotal.value.Responsibility,
-    sufix: 'u'
-  },
-  {
-    name: 'ROI',
-    value: yesterdayTotal.value.ROI,
-    sufix: ''
-  }
-]);
+const monthResults = computed( () => {
+  return monthData.value;
+});
 
-const monthMetrics = computed(() => [
-  {
-    name: 'Profit',
-    value: monthTotal.value.Profit,
-    sufix: 'u'
-  },
-  {
-    name: 'Investido',
-    value: monthTotal.value.Responsibility,
-    sufix: 'u'
-  },
-  {
-    name: 'ROI',
-    value: monthTotal.value.ROI,
-    sufix: ''
-  }
-]);
+const yesterdayTotal = computed(() => {
+  return _find(yesterdayResults.value, { Date: 'Total' });
+})
+
+const monthTotal = computed(() => {
+  return _find(monthResults.value, { Date: 'Total' });
+})
+
+const yesterdayMetrics = computed(() => {
+  return [
+    {
+      name: 'Profit',
+      value: yesterdayTotal.value.Profit,
+      sufix: 'u'
+    },
+    {
+      name: 'Investido',
+      value: yesterdayTotal.value.Responsibility,
+      sufix: 'u'
+    },
+    {
+      name: 'ROI',
+      value: yesterdayTotal.value.ROI,
+      sufix: ''
+    }
+  ]
+});
+
+const monthMetrics = computed(() => {
+  return [
+    {
+      name: 'Profit',
+      value: monthTotal.value.Profit,
+      sufix: 'u'
+    },
+    {
+      name: 'Investido',
+      value: monthTotal.value.Responsibility,
+      sufix: 'u'
+    },
+    {
+      name: 'ROI',
+      value: monthTotal.value.ROI,
+      sufix: ''
+    }
+  ]
+});
 
 const top3YesterdayModels = computed(() => {
   let removedLast = yesterdayResults.value.slice(0, -1);
