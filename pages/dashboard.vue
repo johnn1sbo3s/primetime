@@ -35,7 +35,7 @@
 
     <u-card v-else>
       <template #header>
-        <p class="font-semibold">{{ isAfterTime ? 'Resultados de ontem' : 'Resultados de anteontem'}}</p>
+        <p class="font-semibold">{{ !error ? 'Resultados de ontem' : 'Resultados de anteontem'}}</p>
       </template>
 
       <div class="flex gap-5 w-full">
@@ -94,30 +94,36 @@ import { DateTime } from 'luxon';
 const runtimeConfig = useRuntimeConfig();
 const apiUrl = runtimeConfig.public.API_URL;
 
-const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd');
 const month = DateTime.now().toFormat('M');
+const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd');
 const dayBeforeYersterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
-let limit = DateTime.now().set({ hour: 10, minute: 15, second: 0, millisecond: 0 });
-const isAfterTime = DateTime.now() > limit ? true : false;
 const onlyChosenModels = ref(true);
+const yesterdayResults = ref({});
+const monthResults = ref({});
 
-let requisitionUrl = `${apiUrl}/daily-results/${dayBeforeYersterday}`;
-
-if (isAfterTime) {
-  requisitionUrl = `${apiUrl}/daily-results/${yesterday}`;
-}
-
-const { data: yesterdayResults, pending } = await useLazyFetch(requisitionUrl, {
+const { data: yesterdayData, pending, error } = await useLazyFetch(`${apiUrl}/daily-results/${yesterday}`, {
   params: {
     filtered: onlyChosenModels,
-  }
+  },
 });
+yesterdayResults.value = yesterdayData.value;
 
-const { data: monthResults } = await useFetch(`${apiUrl}/monthly-results/${month}`, {
+if (yesterdayResults.value == null) {
+  const { data: yesterdayData, pending } = await useLazyFetch(`${apiUrl}/daily-results/${dayBeforeYersterday}`, {
+    params: {
+      filtered: onlyChosenModels,
+    },
+  });
+  yesterdayResults.value = yesterdayData.value;
+};
+
+const { data: monthData } = await useFetch(`${apiUrl}/monthly-results/${month}`, {
   params: {
     filtered: onlyChosenModels,
-  }
+  },
 });
+
+monthResults.value = monthData.value;
 
 const yesterdayTotal = computed(() => _find(yesterdayResults.value, { Date: 'Total' }));
 const monthTotal = computed(() => _find(monthResults.value, { Date: 'Total' }));

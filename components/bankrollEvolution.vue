@@ -128,7 +128,6 @@ const chartStyle = ref({
 
 const { data: bankrollData, pending } = await useLazyFetch(`${apiUrl}/bankroll-evolution`,
 {
-    server: false,
     params: {
         filtered: props.modelValue,
     }
