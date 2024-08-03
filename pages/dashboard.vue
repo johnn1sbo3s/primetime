@@ -8,7 +8,7 @@
 			size="lg"
 			on-icon="i-heroicons-check-20-solid"
 			off-icon="i-heroicons-x-mark-20-solid"
-			:loading="monthDataStatus === 'pending'"
+			:loading="status === 'pending'"
 			:model-value="onlyChosenModels"
 			@click="onlyChosenModels = !onlyChosenModels"
 		  />
@@ -19,7 +19,7 @@
 	</div>
 
 	<u-skeleton
-	  v-if="yesterdayDataStatus === 'pending'"
+	  v-if="status === 'pending'"
 	  class="w-full h-[510px]"
 	/>
 
@@ -37,7 +37,7 @@
 	</u-card>
 
 	<u-skeleton
-	  v-if="yesterdayDataStatus === 'pending'"
+	  v-if="status === 'pending'"
 	  class="w-full h-[330px]"
 	/>
 
@@ -66,7 +66,7 @@
 	</u-card>
 
 	<u-skeleton
-	  v-if="monthDataStatus === 'pending'"
+	  v-if="status === 'pending'"
 	  class="w-full h-[330px]"
 	/>
 
@@ -99,39 +99,108 @@
 <script setup>
 import { DateTime } from 'luxon';
 import { formatDate } from '~/utils/formatDate';
+import { useStore } from '~/stores/useStore';
 
 const runtimeConfig = useRuntimeConfig();
 const apiUrl = runtimeConfig.public.API_URL;
+const store = useStore();
 
 const month = DateTime.now().toFormat('M');
 const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd');
 const dayBeforeYesterday = DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd');
 const onlyChosenModels = ref(true);
 
-const { data: bankrollData } = await useFetch(`${apiUrl}/bankroll-evolution`,
-{
-	params: {
-		filtered: onlyChosenModels,
+const bankrollData = ref({});
+const yesterdayData = ref({});
+const dayBeforeYesterdayData = ref({});
+const monthData = ref({});
+const status = ref('pending');
+const yesterdayDataError = ref(false);
+
+const lastFetchOverTwentyHours = () => {
+	const twentyHours = 20 * 60 * 60 * 1000;
+	const currentDate = new Date();
+	const lastFetchDate = new Date(store.getLastFetch);
+	const lastFilteredFetchDate = new Date(store.getFilteredLastFetch);
+	const timeDifference = ref(0);
+
+	if(onlyChosenModels.value) {
+		timeDifference.value = currentDate.getTime() - lastFilteredFetchDate.getTime();
+	} else {
+		timeDifference.value = currentDate.getTime() - lastFetchDate.getTime();
 	}
-});
 
-const { data: yesterdayData, status: yesterdayDataStatus, error: yesterdayDataError } = await useFetch(`${apiUrl}/daily-results/${yesterday}`, {
-  params: {
-	filtered: onlyChosenModels,
-  },
-});
+	return timeDifference > twentyHours;
+};
 
-const { data: dayBeforeYesterdayData } = await useFetch(`${apiUrl}/daily-results/${dayBeforeYesterday}`, {
-  params: {
-	filtered: onlyChosenModels,
-  },
-})
+const fetchData = async () => {
+	try {
+		status.value = 'pending';
+		const [
+		bankrollResponse,
+		yesterdayResponse,
+		dayBeforeYesterdayResponse,
+		monthResponse,
+		] = await Promise.all([
+		useFetch(`${apiUrl}/bankroll-evolution`, {
+			params: { filtered: onlyChosenModels },
+		}),
+		useFetch(`${apiUrl}/daily-results/${yesterday}`, {
+			params: { filtered: onlyChosenModels },
+		}),
+		useFetch(`${apiUrl}/daily-results/${dayBeforeYesterday}`, {
+			params: { filtered: onlyChosenModels },
+		}),
+		useFetch(`${apiUrl}/monthly-results/${month}`, {
+			params: { filtered: onlyChosenModels },
+		}),
+		]);
 
-const { data: monthData, status: monthDataStatus } = await useFetch(`${apiUrl}/monthly-results/${month}`, {
-  params: {
-	filtered: onlyChosenModels,
-  },
-});
+		bankrollData.value = bankrollResponse.data.value;
+		store.setBankrollData(bankrollResponse.data.value, onlyChosenModels.value);
+
+		yesterdayDataError.value = yesterdayResponse.error?.value || null;
+		yesterdayData.value = yesterdayResponse.data.value;
+		store.setYesterdayData(yesterdayResponse.data.value, onlyChosenModels.value);
+
+		dayBeforeYesterdayData.value = dayBeforeYesterdayResponse.data.value;
+		store.setDayBeforeYesterdayData(dayBeforeYesterdayResponse.data.value, onlyChosenModels.value);
+
+		monthData.value = monthResponse.data.value;
+		store.setMonthData(monthResponse.data.value, onlyChosenModels.value);
+
+		store.setLastFetch(onlyChosenModels.value);
+
+		status.value = 'success';
+	} catch (error) {
+		console.error('Error fetching data:', error);
+	}
+};
+
+fetchData();
+
+// if (onlyChosenModels.value) {
+// 	if (!!store.getFilteredMonthData || lastFetchOverTwentyHours()) {
+// 		console.log('fetching filtered data...');
+// 		fetchData();
+// 	} else {
+// 		status.value = 'pending';
+// 		bankrollData.value = store.getFilteredBankrollData;
+// 		yesterdayData.value = store.getFilteredYesterdayData;
+// 		dayBeforeYesterdayData.value = store.getFilteredDayBeforeYesterdayData;
+// 		monthData.value = store.getFilteredMonthData;
+// 		status.value = 'success';
+// 	}
+// } else {
+// 	if (!store.monthData || !store.dayBeforeYesterdayData || lastFetchOverTwentyHours()) {
+// 	} else {status.value = 'pending';
+// 		bankrollData.value = store.getBankrollData;
+// 		yesterdayData.value = store.getYesterdayData;
+// 		dayBeforeYesterdayData.value = store.getDayBeforeYesterdayData;
+// 		monthData.value = store.getMonthData;
+// 		status.value = 'success';
+// 	}
+// }
 
 const yesterdayResults = computed(() => {
   return yesterdayData?.value ? yesterdayData.value : dayBeforeYesterdayData.value;
@@ -249,6 +318,10 @@ const positiveMonthModels = computed(() => {
   let models = _filter(monthResults.value, item => item.Date != 'Total' );
   let positive = _filter(models, item => item.Profit > 0);
   return positive.length;
+});
+
+watch(onlyChosenModels, () => {
+  fetchData();
 });
 
 </script>
