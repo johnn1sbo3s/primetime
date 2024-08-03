@@ -56,8 +56,6 @@ const props = defineProps({
   }
 })
 
-console.log(props.modelValue);
-
 const runtimeConfig = useRuntimeConfig();
 const apiUrl = runtimeConfig.public.API_URL;
 
