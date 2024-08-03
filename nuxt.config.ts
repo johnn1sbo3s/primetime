@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ["@nuxt/ui", "nuxt-lodash", "@nuxt/fonts"],
+  modules: ["@nuxt/ui", "nuxt-lodash", "@nuxt/fonts", "@pinia/nuxt"],
   devtools: { enabled: false },
 
   lodash: {
