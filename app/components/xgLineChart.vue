@@ -53,6 +53,7 @@
 import { computed } from 'vue'
 import { ensureChartSetup, lineChartComponent } from '~/utils/chartSetup'
 import { formatNumber } from '~/utils/formatNumber'
+import { mergeXgSeries } from '~/utils/scannerShots'
 
 ensureChartSetup()
 
@@ -63,15 +64,9 @@ const props = defineProps({
   liveSamples: { type: Array, default: () => [] },
 })
 
-const merged = computed(() => {
-  const base = Array.isArray(props.history) ? props.history : []
-  const live = Array.isArray(props.liveSamples) ? props.liveSamples : []
-  if (!live.length) return base
-  const byMinute = new Map()
-  for (const p of base) byMinute.set(p.minute, p)
-  for (const p of live) byMinute.set(p.minute, p)
-  return [...byMinute.values()].sort((a, b) => a.minute - b.minute)
-})
+// União por minuto: xg do ao vivo vence, mas os shot_events do minuto são
+// preservados (histórico + delta do ciclo, com dedup) — ver scannerShots.js.
+const merged = computed(() => mergeXgSeries(props.history, props.liveSamples))
 
 const lastHome = computed(() => {
   const m = merged.value

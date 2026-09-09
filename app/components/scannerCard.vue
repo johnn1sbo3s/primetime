@@ -372,6 +372,7 @@ import { isRecentNotification } from '~/utils/scanner.js'
 import { modelNameToNaturalName } from '~/utils/resolveModelName'
 import { formatNumber, formatPercent } from '~/utils/formatNumber'
 import { computePressure, computeControl } from '~/utils/scannerPressure'
+import { mergeXgSeries } from '~/utils/scannerShots'
 import { toBlob } from 'html-to-image'
 import { useFavorites } from '~/composables/useFavorites'
 import { usePreGameAnalysis } from '~/composables/usePreGameAnalysis'
@@ -428,11 +429,22 @@ async function openXgHistory() {
       if (!xgOpen.value) return
       const minute = props.game.minute
       if (minute == null) return
-      const entry = { minute: Number(minute), xg_home: xg?.home ?? null, xg_away: xg?.away ?? null }
+      const entry = {
+        minute: Number(minute),
+        xg_home: xg?.home ?? null,
+        xg_away: xg?.away ?? null,
+        // Delta do ciclo ainda não salvo no histórico: se o ponto ao vivo não
+        // carregar os chutes novos, o merge do gráfico apagaria os do minuto.
+        // Vazio = sem chute novo, normal (nunca erro/retry).
+        shot_events: props.game.shot_events ?? [],
+      }
       if (entry.xg_home == null && entry.xg_away == null) return
-      const idx = xgLiveSamples.value.findIndex((p) => p.minute === entry.minute)
-      if (idx >= 0) xgLiveSamples.value[idx] = entry
-      else xgLiveSamples.value.push(entry)
+      // Upsert incremental com a função do gráfico: se o minuto não avançou
+      // (ex.: 90' + acréscimos), o ciclo novo NÃO substitui o ponto inteiro —
+      // o merge une por minuto (xg novo vence, shot_events dos ciclos se
+      // acumulam com dedup). Sem isto, chutes de um ciclo anterior no mesmo
+      // minuto seriam perdidos antes de o `merged` rodar.
+      xgLiveSamples.value = mergeXgSeries(xgLiveSamples.value, [entry])
     },
     { immediate: true },
   )
