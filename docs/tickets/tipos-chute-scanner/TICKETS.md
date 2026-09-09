@@ -55,25 +55,28 @@ Ticket 0 (totais `shot_tiers` para as barras; a agregação deste ticket serve o
 
 ---
 
-## Ticket 2 — Barras do card: 4 linhas C1–C4
+## Ticket 2 — Barras do card: chutes agrupados C1–C2 e C3
 
-**Status:** 🔴 Não iniciado
+**Status:** 🟢 Completo em 2026-09-08
 
 ### Objetivo
-Exibir 4 linhas novas nas barras de métricas do card (C1, C2, C3, C4) com contagem casa × fora.
+Exibir nas barras de métricas do card os chutes com perigo **agrupados**: 1 linha "CHUTES C1–C2" (soma dos níveis C1+C2, casa × fora) e 1 linha "C3" (chance média). **Sem C4** (chute sem perigo) — decisão do usuário: não faz sentido exibir. Cada linha leva hint explicando o nível.
 
 ### Scope
-- 4 linhas novas em `statRows` (`scannerCard.vue`), reaproveitando o layout dual casa/fora (`bg-teal-400`/`bg-blue-500`) e formatação existentes
-- Contadores vêm do Ticket 0 (`shot_tiers`); agregação do Ticket 1 serve o modal/gráfico
-- Visual (cores, símbolos, disposição) decidido no ticket via visual companion
-- Atualizar `scannerCard.spec.ts` (contagens de UBadge, fixture `game()` sem `shot_events`)
+- **2 linhas novas** em `statRows` (`scannerCard.vue`), **posição: logo após XG** (aprovado): `XG → CHUTES C1–C2 → C3 → FINALIZAÇÕES → CHANCES CLARAS → TOQUES NA ÁREA`
+- Layout dual casa/fora reaproveitado (`bg-teal-400` casa / `bg-blue-500` fora / trilho `bg-zinc-800`), formatação inteira `formatNumber(v, 0)`
+- Fonte: `shot_tiers` do Ticket 0 (`game.shot_tiers`), **não** a agregação do Ticket 1 (que serve modal/gráfico)
+- Hint em cada linha nova com ícone `i-lucide-circle-help` (mesmo padrão dos hints CONTROLE/C10/PICO do card — aprovado), tooltip **por nível com faixa de xG**: C1–C2 → "Grande chance (xG ≥ 0,50) + Boa chance (xG 0,20–0,50)"; C3 → "Chance média (xG 0,05–0,20)"
+- Atualizar `scannerCard.spec.ts`: fixture `game()` passa a aceitar `shot_tiers`; novo assert de ícones de ajuda (2 novas linhas com hint); casos de ausência/zeros
 
 ### Dependencies
-Tickets 0 e 1.
+Ticket 0 (`shot_tiers` no live.json). Ticket 1 **não** é fonte das barras (só do modal/gráfico).
 
 ### Notes
-- Atenção a colisões semânticas de cor: teal = casa, blue = fora, âmbar pulsante = alerta recente — escala dos 4 níveis precisa diferenciar por mais que cor
+- **Exibição quando sem dados = política FINALIZAÇÕES** (aprovada): `shot_tiers` presente com zeros → "0" com trilho vazio (fundo `bg-zinc-800` aparece); campo ausente (fixture antiga/preview) → "—" sem barra preenchida; **nunca esconder a linha** por falta de dado
+- **Agrupamento é só decisão de exibição do card**: o dado `shot_tiers` por tier permanece intacto; Tickets 3/4 usam `shot_events` por chute individual no gráfico (C1–C4), não afetados por este agrupamento
 - Novo bloco entra no skeleton existente, nunca spinner
+- Sem colisão de cor nova: teal = casa, blue = fora, âmbar pulsante = alerta recente — a escala por nível **não** usa cor no card (só nas linhas agrupadas), cor/símbolo por nível fica para os marcadores do gráfico (Ticket 3)
 
 ---
 
