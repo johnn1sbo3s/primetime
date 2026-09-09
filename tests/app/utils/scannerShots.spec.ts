@@ -234,6 +234,13 @@ describe('mergeXgSeries', () => {
     expect(merged[0].shot_events).toEqual([shotEv(10, 'away', 'C1', 0.55)])
   })
 
+  it('ponto do AO VIVO SEM a chave shot_events no mesmo minuto preserva os do histórico (unionEvents pula não-lista)', () => {
+    const history = [point(10, 0.2, 0.1, [shotEv(10, 'home', 'C2', 0.3)])]
+    const merged = mergeXgSeries(history, [{ minute: 10, xg_home: 0.5, xg_away: 0.2 }]) // live sem shot_events
+    expect(merged[0]).toMatchObject({ xg_home: 0.5, xg_away: 0.2 }) // xg do ao vivo vence
+    expect(merged[0].shot_events).toEqual([shotEv(10, 'home', 'C2', 0.3)]) // histórico preservado
+  })
+
   it('xg do ao vivo = 0 conta como presente e vence o histórico (0 não é nullish)', () => {
     const history = [point(10, 0.2, 0.1, [shotEv(10, 'home', 'C2', 0.3)])]
     const merged = mergeXgSeries(history, [{ minute: 10, xg_home: 0, xg_away: 0.3, shot_events: [] }])
