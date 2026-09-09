@@ -47,6 +47,29 @@ function game(notifications = [], momentum = [{ minute: 1, home: 0.5, away: 0 }]
   }
 }
 
+// game com shot_tiers não-nulos (Ticket 0): C1 4×2 + C2 3×0 → CHUTES C1–C2 = 7×2; C3 = 1×6
+function gameWithShots() {
+  return {
+    ...game(),
+    shot_tiers: {
+      C1: { home: 4, away: 2 },
+      C2: { home: 3, away: 0 },
+      C3: { home: 1, away: 6 },
+      C4: { home: 9, away: 8 },
+    },
+  }
+}
+
+// Texto dos valores de uma row de stat pelo label central. A row é a div
+// .flex.items-baseline.justify-between com filhos diretos [home, container
+// label, away]; o label é o span-folha .uppercase dentro do container central.
+const rowValues = (wrapper, label) => {
+  const labelEl = wrapper.findAll('span.uppercase').find((s) => s.text() === label)
+  const row = labelEl.element.parentElement.parentElement
+  const children = Array.from(row.children)
+  return { home: children[0].textContent.trim(), away: children[2].textContent.trim() }
+}
+
 describe('ScannerCard', () => {
   it('renderiza times, placar, minuto e stats', async () => {
     const wrapper = await mountCard(ScannerCard, { props: { game: game() } })
@@ -221,10 +244,10 @@ describe('ScannerCard', () => {
     expect(wrapper.text()).toContain('—')
   })
 
-  it('tem ícone de ajuda (?) nas linhas PICO, CONTROLE e C10', async () => {
+  it('tem ícone de ajuda (?) nas linhas PICO, CONTROLE, C10 e nas 2 de chute', async () => {
     const wrapper = await mountCard(ScannerCard, { props: { game: game() } })
     // classe real do @nuxt/icon em modo CSS: i-lucide:circle-help (dois-pontos)
-    expect(wrapper.findAll('.i-lucide\\:circle-help').length).toBe(3)
+    expect(wrapper.findAll('.i-lucide\\:circle-help').length).toBe(5)
   })
 
   it("mostra chip de tendência ▲ quando os últimos 5' superam a média do jogo", async () => {
@@ -268,6 +291,48 @@ describe('ScannerCard', () => {
       .findAllComponents({ name: 'UTooltip' })
       .find((t) => t.props('text') === 'Universidad Católica (CHI)')
     expect(nameTooltip).toBeTruthy()
+  })
+
+  it('exibe CHUTES C1–C2 (soma C1+C2) e C3 após XG quando shot_tiers presente', async () => {
+    const wrapper = await mountCard(ScannerCard, { props: { game: gameWithShots() } })
+    expect(rowValues(wrapper, 'CHUTES C1–C2')).toEqual({ home: '7', away: '2' })
+    expect(rowValues(wrapper, 'C3')).toEqual({ home: '1', away: '6' })
+    // C4 não vira linha própria
+    expect(wrapper.text()).not.toContain('SEM PERIGO')
+  })
+
+  it('linhas de chute ficam após XG e antes de FINALIZAÇÕES', async () => {
+    const wrapper = await mountCard(ScannerCard, { props: { game: gameWithShots() } })
+    const text = wrapper.text()
+    expect(text.indexOf('XG')).toBeGreaterThan(-1)
+    expect(text.indexOf('CHUTES C1–C2')).toBeGreaterThan(text.indexOf('XG'))
+    expect(text.indexOf('C3')).toBeGreaterThan(text.indexOf('CHUTES C1–C2'))
+    expect(text.indexOf('FINALIZAÇÕES')).toBeGreaterThan(text.indexOf('C3'))
+  })
+
+  it('shot_tiers com zeros → "0" com trilho vazio (política FINALIZAÇÕES)', async () => {
+    const wrapper = await mountCard(ScannerCard, {
+      props: {
+        game: {
+          ...game(),
+          shot_tiers: {
+            C1: { home: 0, away: 0 },
+            C2: { home: 0, away: 0 },
+            C3: { home: 0, away: 0 },
+            C4: { home: 0, away: 0 },
+          },
+        },
+      },
+    })
+    expect(rowValues(wrapper, 'CHUTES C1–C2')).toEqual({ home: '0', away: '0' })
+    expect(rowValues(wrapper, 'C3')).toEqual({ home: '0', away: '0' })
+    expect(wrapper.text()).toContain('CHUTES C1–C2') // linha visível mesmo sem chutes
+  })
+
+  it('shot_tiers ausente (fixture antiga/preview) → "—" nas linhas de chute', async () => {
+    const wrapper = await mountCard(ScannerCard, { props: { game: game() } })
+    expect(rowValues(wrapper, 'CHUTES C1–C2')).toEqual({ home: '—', away: '—' })
+    expect(rowValues(wrapper, 'C3')).toEqual({ home: '—', away: '—' })
   })
 })
 // Cenário mutável para o mock do composable de pré-jogo (vi.mock é hoisted —
