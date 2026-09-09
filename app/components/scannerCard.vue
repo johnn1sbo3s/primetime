@@ -372,7 +372,7 @@ import { isRecentNotification } from '~/utils/scanner.js'
 import { modelNameToNaturalName } from '~/utils/resolveModelName'
 import { formatNumber, formatPercent } from '~/utils/formatNumber'
 import { computePressure, computeControl } from '~/utils/scannerPressure'
-import { mergeXgSeries } from '~/utils/scannerShots'
+import { mergeXgSeries, sumTiers } from '~/utils/scannerShots'
 import { toBlob } from 'html-to-image'
 import { useFavorites } from '~/composables/useFavorites'
 import { usePreGameAnalysis } from '~/composables/usePreGameAnalysis'
@@ -463,7 +463,6 @@ function retryXg() {
 }
 
 const STAT_LABELS = [
-  ['xg', 'XG', 2, ''],
   ['shots', 'FINALIZAÇÕES', 0, ''],
   ['big_chances', 'CHANCES CLARAS', 0, ''],
   ['box_touches', 'TOQUES NA ÁREA', 0, ''],
@@ -474,6 +473,8 @@ const CONTROL_HINT =
 const C10_HINT = 'C10 = controle dos últimos 10 minutos: o mesmo cálculo, considerando só as últimas 10 barras.'
 const PICO_HINT =
   "PICO 10' = maior barra de pressão do time nos últimos 10 minutos. O valor vai de 0 a 1 (máximo = 1). A barra de progresso mostra a disputa entre os times."
+const SHOT_C12_HINT = 'Grande chance (xG ≥ 0,50) + Boa chance (xG 0,20–0,50)'
+const SHOT_C3_HINT = 'Chance média (xG 0,05–0,20)'
 const TREND_THRESHOLD = 0.05
 
 const flipped = ref(false)
@@ -565,21 +566,49 @@ const trendTitle = (side) => {
   return `Pressão ${trends.value[side] === 'up' ? 'subindo' : 'caindo'}: últimos 5' (${fmtRaw(pair.recent)}) vs média do jogo (${fmtRaw(pair.total)})`
 }
 
-const statRows = computed(() => [
-  ...derivedRows.value,
-  ...STAT_LABELS.map(([key, label, dec, suffix]) => {
-    const pair = props.game.stats?.[key] || {}
-    const home = pair.home
-    const away = pair.away
-    const total = (Number(home) || 0) + (Number(away) || 0)
+// Constrói a row de uma stat do Flashscore (mesmo shape de antes — extraído
+// para reordenar com as linhas de chute sem duplicar a lógica).
+const statRow = ([key, label, dec, suffix]) => {
+  const pair = props.game.stats?.[key] || {}
+  const home = pair.home
+  const away = pair.away
+  const total = (Number(home) || 0) + (Number(away) || 0)
+  return {
+    label,
+    home: home != null ? `${formatNumber(home, dec)}${suffix}` : '—',
+    away: away != null ? `${formatNumber(away, dec)}${suffix}` : '—',
+    pctHome: total > 0 ? ((Number(home) || 0) / total) * 100 : null,
+    hint: null,
+  }
+}
+
+// Linhas de chute com perigo: "CHUTES C1–C2" (soma C1+C2 por lado) e "C3"
+// (chance média). C4 (sem perigo) não é exibido — decisão do usuário.
+// Fonte: shot_tiers do Ticket 0 (acumulado por jogo). Campo ausente (fixture
+// antiga/preview) → "—"; zeros → "0" com trilho vazio — política FINALIZAÇÕES:
+// a linha nunca some por falta de dado.
+const shotTierRows = computed(() => {
+  const tiers = props.game.shot_tiers
+  const present = tiers != null
+  const make = (label, tierKeys, hint) => {
+    const pair = sumTiers(tiers, tierKeys)
+    const total = pair.home + pair.away
     return {
       label,
-      home: home != null ? `${formatNumber(home, dec)}${suffix}` : '—',
-      away: away != null ? `${formatNumber(away, dec)}${suffix}` : '—',
-      pctHome: total > 0 ? ((Number(home) || 0) / total) * 100 : null,
-      hint: null,
+      home: present ? `${formatNumber(pair.home, 0)}` : '—',
+      away: present ? `${formatNumber(pair.away, 0)}` : '—',
+      pctHome: present && total > 0 ? (pair.home / total) * 100 : null,
+      hint,
     }
-  }),
+  }
+  return [make('CHUTES C1–C2', ['C1', 'C2'], SHOT_C12_HINT), make('C3', ['C3'], SHOT_C3_HINT)]
+})
+
+const statRows = computed(() => [
+  ...derivedRows.value,
+  statRow(['xg', 'XG', 2, '']),
+  ...shotTierRows.value,
+  ...STAT_LABELS.map(statRow),
 ])
 
 const odds = computed(() => props.game.odds || {})
