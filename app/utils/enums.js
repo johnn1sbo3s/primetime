@@ -52,3 +52,20 @@ export function tradingModelLabel(model, fallback) {
   }
   return fallback ?? model
 }
+
+// Níveis de chute do scanner (tipos de chute C1–C4) → nomes PT-BR.
+// Espelha o TIER_LABELS do backend (momentum/shot_classifier.py). O campo
+// `label` de cada evento tem precedência quando presente; esta tabela é o
+// fallback (padrão MARKET_LABELS / tradingModelLabel).
+export const TIER_LABELS = Object.freeze({
+  C1: 'Grande chance',
+  C2: 'Boa chance',
+  C3: 'Chance média',
+  C4: 'Sem perigo',
+})
+
+// Display de nível: label do backend vence; senão a tabela; senão o próprio
+// código (C5 etc. nunca quebra).
+export function tierLabel(tier, backendLabel) {
+  return backendLabel ?? TIER_LABELS[tier] ?? tier
+}

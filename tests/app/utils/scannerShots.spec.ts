@@ -1,6 +1,7 @@
 // tests/app/utils/scannerShots.spec.ts
 import { describe, it, expect } from 'vitest'
 import { collectShots, countShotsByTier, emptyShotTotals, mergeXgSeries } from '~/utils/scannerShots'
+import { TIER_LABELS, tierLabel } from '~/utils/enums'
 
 // chute no shape do contrato do backend: {minute, team, xg_delta, tier, label}
 const shot = (minute, team, tier, delta, label) => ({
@@ -247,5 +248,32 @@ describe('mergeXgSeries', () => {
     ]
     const merged = mergeXgSeries(history, [{ minute: 20, xg_home: 0.4, xg_away: 0.2, shot_events: [] }])
     expect(merged.map((p) => p.minute)).toEqual([10, 20]) // '90+1' descartado, não vira NaN
+  })
+})
+
+describe('TIER_LABELS / tierLabel', () => {
+  it('TIER_LABELS espelha os nomes PT-BR do backend (shot_classifier.py)', () => {
+    expect(TIER_LABELS).toEqual({
+      C1: 'Grande chance',
+      C2: 'Boa chance',
+      C3: 'Chance média',
+      C4: 'Sem perigo',
+    })
+    expect(Object.isFrozen(TIER_LABELS)).toBe(true) // padrão das tabelas de enums.js
+  })
+
+  it('tierLabel: label do backend vence quando presente (inclusive vazio)', () => {
+    expect(tierLabel('C1', 'Chance absurda')).toBe('Chance absurda')
+    expect(tierLabel('C2', '')).toBe('') // label '' presente → `??` não cai no fallback
+  })
+
+  it('tierLabel: fallback da tabela quando não há label do backend', () => {
+    expect(tierLabel('C2')).toBe('Boa chance')
+    expect(tierLabel('C2', null)).toBe('Boa chance')
+    expect(tierLabel('C2', undefined)).toBe('Boa chance')
+  })
+
+  it('tierLabel: tier desconhecido (C5) devolve o próprio código — nunca quebra', () => {
+    expect(tierLabel('C5')).toBe('C5')
   })
 })
