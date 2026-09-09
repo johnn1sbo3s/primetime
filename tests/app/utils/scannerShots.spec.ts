@@ -1,6 +1,6 @@
 // tests/app/utils/scannerShots.spec.ts
 import { describe, it, expect } from 'vitest'
-import { collectShots, countShotsByTier, emptyShotTotals, mergeXgSeries } from '~/utils/scannerShots'
+import { collectShots, countShotsByTier, emptyShotTotals, mergeXgSeries, sumTiers } from '~/utils/scannerShots'
 import { TIER_LABELS, tierLabel } from '~/utils/enums'
 
 // chute no shape do contrato do backend: {minute, team, xg_delta, tier, label}
@@ -282,5 +282,45 @@ describe('TIER_LABELS / tierLabel', () => {
 
   it('tierLabel: tier desconhecido (C5) devolve o próprio código — nunca quebra', () => {
     expect(tierLabel('C5')).toBe('C5')
+  })
+})
+
+describe('sumTiers', () => {
+  it('soma os tiers listados por lado (C1+C2 → linha CHUTES C1–C2)', () => {
+    const totals = { C1: { home: 4, away: 2 }, C2: { home: 3, away: 0 }, C3: { home: 1, away: 6 } }
+    expect(sumTiers(totals, ['C1', 'C2'])).toEqual({ home: 7, away: 2 })
+  })
+
+  it('soma um tier só quando a lista tem 1 item (linha C3)', () => {
+    const totals = { C1: { home: 4, away: 2 }, C3: { home: 1, away: 6 } }
+    expect(sumTiers(totals, ['C3'])).toEqual({ home: 1, away: 6 })
+  })
+
+  it('shotTiers ausente/null/lixo → zeros, sem throw', () => {
+    expect(sumTiers(undefined, ['C1', 'C2'])).toEqual({ home: 0, away: 0 })
+    expect(sumTiers(null, ['C1'])).toEqual({ home: 0, away: 0 })
+    expect(sumTiers('x', ['C1'])).toEqual({ home: 0, away: 0 })
+    expect(sumTiers([], ['C1'])).toEqual({ home: 0, away: 0 })
+  })
+
+  it('tier ausente ou não-objeto → contribui zero, sem throw', () => {
+    expect(sumTiers({ C2: { home: 3, away: 0 } }, ['C1', 'C2'])).toEqual({ home: 3, away: 0 })
+    expect(sumTiers({ C1: null, C2: 'x' }, ['C1', 'C2'])).toEqual({ home: 0, away: 0 })
+  })
+
+  it('valor por lado ausente ou não-numérico → conta como 0', () => {
+    const totals = { C1: { home: null, away: 'x' }, C2: { home: 3 } }
+    expect(sumTiers(totals, ['C1', 'C2'])).toEqual({ home: 3, away: 0 })
+  })
+
+  it('tier fora da lista (C4) não entra na soma', () => {
+    const totals = { C1: { home: 4, away: 2 }, C4: { home: 9, away: 8 } }
+    expect(sumTiers(totals, ['C1', 'C2'])).toEqual({ home: 4, away: 2 })
+  })
+
+  it('não muta a entrada', () => {
+    const totals = { C1: { home: 4, away: 2 }, C2: { home: 3, away: 0 } }
+    sumTiers(totals, ['C1', 'C2'])
+    expect(totals).toEqual({ C1: { home: 4, away: 2 }, C2: { home: 3, away: 0 } })
   })
 })

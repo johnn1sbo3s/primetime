@@ -116,3 +116,20 @@ export function mergeXgSeries(history, liveSamples) {
   }
   return [...byMinute.values()].sort((a, b) => a.minute - b.minute)
 }
+
+// Soma totais de tiers do shot_tiers do backend (Ticket 0) por lado.
+// Ex.: sumTiers(game.shot_tiers, ['C1', 'C2']) → { home, away } — a linha
+// "CHUTES C1–C2" do card. Totals ausente/nulo → zeros; valor por tier/lado
+// ausente ou não-numérico → 0 (nunca quebra). C4 (sem perigo) fica de fora
+// das listas chamadas — decisão de exibição do card, dado intacto no payload.
+export function sumTiers(shotTiers, tierKeys) {
+  const out = { home: 0, away: 0 }
+  const t = shotTiers && typeof shotTiers === 'object' ? shotTiers : {}
+  for (const key of tierKeys) {
+    const pair = t[key]
+    if (!pair || typeof pair !== 'object') continue
+    out.home += Number(pair.home) || 0
+    out.away += Number(pair.away) || 0
+  }
+  return out
+}
