@@ -58,3 +58,61 @@ export function countShotsByTier(points) {
   }
   return totals
 }
+
+// Une listas de eventos com dedup por eventKey, preservando a ordem (o
+// histórico primeiro, depois os novos do delta do ciclo).
+function unionEvents(...lists) {
+  const seen = new Set()
+  const out = []
+  for (const list of lists) {
+    if (!Array.isArray(list)) continue
+    for (const e of list) {
+      if (!e || typeof e !== 'object') continue
+      const key = eventKey(e)
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push(e)
+    }
+  }
+  return out
+}
+
+// Merge por minuto do gráfico xG: o xg do ponto ao vivo vence quando presente,
+// mas os shot_events do minuto = união (histórico + delta do ciclo) com dedup.
+// Ordena por minuto; live vazio → histórico inalterado; pontos do live sem par
+// no histórico são acrescentados. Nunca muta as entradas (props reativas).
+export function mergeXgSeries(history, liveSamples) {
+  const hist = Array.isArray(history) ? history : []
+  const live = Array.isArray(liveSamples) ? liveSamples : []
+  if (!live.length) return hist
+  const byMinute = new Map()
+  for (const p of hist) {
+    if (!p || typeof p !== 'object') continue
+    const minute = Number(p.minute)
+    if (!Number.isFinite(minute)) continue // minuto sempre inteiro (ciclo de detecção); nunca colapsar em NaN
+    // Sempre cópia do array de shot_events (props shallow-readonly): minuto
+    // sem par no live também não pode compartilhar referência com o histórico.
+    byMinute.set(minute, {
+      ...p,
+      shot_events: Array.isArray(p.shot_events) ? [...p.shot_events] : p.shot_events,
+    })
+  }
+  for (const p of live) {
+    if (!p || typeof p !== 'object') continue
+    const minute = Number(p.minute)
+    if (!Number.isFinite(minute)) continue
+    const prev = byMinute.get(minute)
+    if (prev) {
+      // xG acumulado nunca regride: lado ausente/null do ao vivo mantém o valor
+      // do histórico; lado presente do ao vivo vence (0 conta como presente).
+      prev.xg_home = p.xg_home ?? prev.xg_home
+      prev.xg_away = p.xg_away ?? prev.xg_away
+      prev.shot_events = unionEvents(prev.shot_events, p.shot_events)
+    } else {
+      const point = { ...p }
+      point.shot_events = unionEvents(undefined, p.shot_events)
+      byMinute.set(minute, point)
+    }
+  }
+  return [...byMinute.values()].sort((a, b) => a.minute - b.minute)
+}
