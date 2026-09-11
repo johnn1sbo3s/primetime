@@ -29,14 +29,23 @@ function cacheSet(cache, key, value) {
   }
 }
 
-export function useModelsList({ playedOn = null } = {}) {
+export function useModelsList({ playedOn = null, metricsOnly = false } = {}) {
   const cache = useCache()
   const playedOnRef = isRef(playedOn) ? playedOn : ref(playedOn)
-  const cacheKey = computed(() => `models-list-${playedOnRef.value ?? 'default'}`)
-  const query = computed(() => (playedOnRef.value ? { playedOn: playedOnRef.value } : {}))
+  // O cache key TEM de incluir o metricsOnly: o LRU é compartilhado entre as
+  // páginas e sem isso o /performance e o /daily-bets trocam de lista no cache.
+  const cacheKey = computed(() => `models-list-${playedOnRef.value ?? 'default'}${metricsOnly ? '-metricsOnly' : ''}`)
+  const query = computed(() => ({
+    ...(playedOnRef.value ? { playedOn: playedOnRef.value } : {}),
+    ...(metricsOnly ? { metricsOnly: 'true' } : {}),
+  }))
 
   return useFetch(`${apiUrl()}/models`, {
-    key: 'models-list',
+    // `key` também precisa ser a computada: é a chave do nuxtApp._asyncData
+    // (dedupe do framework), não só a do nosso LRU — com a string fixa
+    // 'models-list' as duas páginas continuam compartilhando a entrada.
+    // Precedente no mesmo arquivo: useModelById (`key` computada por id).
+    key: cacheKey,
     query,
     default: () => ({ items: [] }),
     watch: [playedOnRef],

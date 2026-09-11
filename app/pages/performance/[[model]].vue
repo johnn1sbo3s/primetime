@@ -6,7 +6,10 @@ const route = useRoute()
 
 // --- Models list (with playedOn flag for the green dot) ---
 const yesterdayIso = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd')
-const { data: modelsPayload, status: statusModels } = await useModelsList({ playedOn: yesterdayIso })
+const { data: modelsPayload, status: statusModels } = await useModelsList({
+  playedOn: yesterdayIso,
+  metricsOnly: true,
+})
 const listModels = computed(() => (modelsPayload.value?.items || []).map((m) => m.name))
 const listModelItems = computed(() =>
   listModels.value.map((rawId) => ({
