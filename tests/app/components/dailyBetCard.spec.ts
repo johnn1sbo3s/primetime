@@ -34,6 +34,14 @@ describe('DailyBetCard', () => {
     expect(wrapper.text()).toContain('Lay under 25')
   })
 
+  it('prefers Modelo over model when both keys are present', async () => {
+    const wrapper = await mountSuspended(DailyBetCard, {
+      props: { bet: { ...bet, model: 'Lay under 25' } },
+    })
+    expect(wrapper.text()).toContain('Lay favorite home')
+    expect(wrapper.text()).not.toContain('Lay under 25')
+  })
+
   it('renders the match with Home and Away stacked, without Casa/Fora labels', async () => {
     const wrapper = await mountSuspended(DailyBetCard, { props: { bet } })
     const text = wrapper.text()
