@@ -28,27 +28,47 @@ describe('MomentumChart', () => {
     expect(wrapper.find('svg').exists()).toBe(false)
   })
 
-  it('renderiza marcadores de gol', async () => {
+  it('faixa: gol vira bola e chute C2 vira bola numerada', async () => {
     const wrapper = await mountSuspended(MomentumChart, {
       props: {
-        bars: [{ minute: 1, home: 0.5, away: 0 }],
-        goals: [
-          { minute: 23, stoppage_time: 0, team: 'home', player: 'Rony' },
-          { minute: 45, stoppage_time: 2, team: 'away', player: 'Suárez' },
-        ],
+        bars: [{ minute: 43, home: 0.5, away: 0 }],
+        goals: [{ minute: 43, stoppage_time: 0, team: 'home', player: 'x' }],
+        shots: [{ minute: 35, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
+        notifications: [],
+        minute: 45,
       },
     })
-    const circles = wrapper.findAll('circle')
-    expect(circles).toHaveLength(2)
-    expect(circles[0].attributes('cy')).toBe('9')
-    expect(circles[1].attributes('cy')).toBe('101')
+    expect(wrapper.findAll('.lane-shot').length).toBe(1)
+    expect(wrapper.find('.lane-shot text').text()).toBe('2')
+    expect(wrapper.find('.lane-goal path').exists()).toBe(true)
   })
 
-  it('sem gols, sem marcadores', async () => {
+  it('colisão: +N e linha-guia', async () => {
     const wrapper = await mountSuspended(MomentumChart, {
-      props: { bars: [{ minute: 1, home: 0.5, away: 0 }] },
+      props: {
+        bars: [{ minute: 43, home: 0.5, away: 0 }],
+        goals: [{ minute: 43, stoppage_time: 0, team: 'home', player: 'x' }],
+        shots: [{ minute: 43, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
+        notifications: [],
+        minute: 45,
+      },
     })
-    expect(wrapper.findAll('circle')).toHaveLength(0)
+    expect(wrapper.find('.lane-more').exists()).toBe(true)
+    expect(wrapper.find('.lane-more text').text()).toBe('+1')
+  })
+
+  it('linha ao vivo no minuto atual', async () => {
+    const wrapper = await mountSuspended(MomentumChart, {
+      props: { bars: [{ minute: 45, home: 0.5, away: 0 }], minute: 45 },
+    })
+    expect(wrapper.find('.lane-live').exists()).toBe(true)
+  })
+
+  it('faixa 0.4: tracejados do limiar', async () => {
+    const wrapper = await mountSuspended(MomentumChart, {
+      props: { bars: [{ minute: 10, home: 0.5, away: 0 }] },
+    })
+    expect(wrapper.findAll('.lane-threshold')).toHaveLength(2)
   })
 
   it('posiciona barras do 2º tempo no painel direito (após o gap)', async () => {
@@ -63,28 +83,6 @@ describe('MomentumChart', () => {
     const rects = wrapper.findAll('rect.momentum-bar')
     expect(rects[0].attributes('x')).toBe('0') // 1ºT minuto 1
     expect(Number(rects[1].attributes('x'))).toBeCloseTo(P2_SYMMETRIC, 1) // 2ºT 46' -> rel 1, após W1+gap
-  })
-
-  it('gol do 2º tempo posiciona no painel direito', async () => {
-    const wrapper = await mountSuspended(MomentumChart, {
-      props: {
-        bars: [{ minute: 46, half: 2, home: 0.5, away: 0 }],
-        goals: [{ minute: 46, half: 2, stoppage_time: 0, team: 'home', player: 'X' }],
-      },
-    })
-    expect(Number(wrapper.find('circle').attributes('cx'))).toBeCloseTo(P2_SYMMETRIC + 2.5, 1)
-  })
-
-  it("clampa gol além do painel (90+6')", async () => {
-    const wrapper = await mountSuspended(MomentumChart, {
-      props: {
-        bars: [{ minute: 96, half: 2, home: 0.5, away: 0 }],
-        goals: [{ minute: 96, half: 2, stoppage_time: 0, team: 'home', player: 'X' }],
-      },
-    })
-    // h1Len=45, h2Len=50, STEP=632/95≈6.6526, W1≈299.37, P2≈307.37; rel clampado em 50
-    const cx = Number(wrapper.find('circle').attributes('cx'))
-    expect(cx).toBeCloseTo(45 * (632 / 95) + 8 + 49 * (632 / 95) + 2.5, 1) // P2 + 49*STEP + 2.5
   })
 
   it('barra sem half cai no mapeamento legado', async () => {

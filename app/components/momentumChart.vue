@@ -2,51 +2,126 @@
   <div>
     <svg
       v-if="bars.length"
-      viewBox="0 0 640 158"
+      viewBox="0 0 640 214"
       preserveAspectRatio="none"
       role="img"
       aria-label="Gráfico de momentum"
       class="w-full"
     >
-      <rect x="0" y="0" :width="W1" height="110" fill="#27272a" />
+      <line x1="0" y1="56" x2="640" y2="56" stroke="#3f3f46" stroke-width="1" />
 
-      <rect :x="P2" y="0" :width="W2" height="110" fill="#27272a" />
+      <template v-for="item in laneItems" :key="item.group.half + ':' + item.group.minute">
+        <rect :x="item.x - 13" y="11" width="26" height="30" rx="8" fill="#27272a" />
 
-      <line x1="0" y1="55" x2="640" y2="55" stroke="#3f3f46" stroke-width="1" />
+        <line
+          v-if="item.leaderTo != null"
+          :x1="item.x"
+          y1="40"
+          :x2="item.leaderTo"
+          y2="57"
+          stroke="#a1a1aa"
+          stroke-width="1.2"
+        />
 
-      <rect
-        v-for="b in bars"
-        :key="`${halfOf(b)}-${b.minute}`"
-        class="momentum-bar"
-        :x="barX(b)"
-        :y="barY(b)"
-        width="5"
-        :height="barHeight(b)"
-        rx="1.5"
-        :fill="Number(b.home) > 0 ? '#2dd4bf' : '#3b82f6'"
-        opacity="0.85"
+        <g v-if="item.group.winner === 'shot'" class="lane-shot">
+          <circle
+            :cx="item.x"
+            cy="26"
+            r="10"
+            fill="#27272a"
+            :stroke="teamColor(item.group.shots[0].team)"
+            stroke-width="2.5"
+          />
+
+          <text
+            :x="item.x"
+            y="26"
+            text-anchor="middle"
+            dominant-baseline="central"
+            font-size="14"
+            font-weight="bold"
+            fill="#ffffff"
+          >
+            {{ item.group.shots[0].tier.slice(1) }}
+          </text>
+        </g>
+
+        <g v-else-if="item.group.winner === 'goal'" class="lane-goal">
+          <circle :cx="item.x" cy="26" r="10" fill="#f4f4f5" />
+
+          <path :d="BALL_PATH" :fill="teamColor(item.group.goal.team)" :transform="ballTransform(item.x)" />
+        </g>
+
+        <g v-else class="lane-alert">
+          <path :d="diamondD(item.x)" fill="none" stroke="#fbbf24" stroke-width="2" />
+        </g>
+
+        <g v-if="item.group.extra > 0" class="lane-more">
+          <circle :cx="item.x + 19" cy="14" r="9" fill="#52525b" />
+
+          <text
+            :x="item.x + 19"
+            y="14"
+            text-anchor="middle"
+            dominant-baseline="central"
+            font-size="11"
+            font-weight="bold"
+            fill="#ffffff"
+          >
+            +{{ item.group.extra }}
+          </text>
+        </g>
+      </template>
+
+      <line
+        v-if="minute != null"
+        class="lane-live"
+        :x1="liveX"
+        y1="0"
+        :x2="liveX"
+        y2="166"
+        stroke="#ef4444"
+        stroke-width="2"
       />
 
-      <circle
-        v-for="(g, i) in goals"
-        :key="i"
-        :cx="barX(g) + 2.5"
-        :cy="g.team === 'home' ? 9 : 101"
-        r="5"
-        fill="#f4f4f5"
-        :stroke="g.team === 'home' ? '#2dd4bf' : '#3b82f6'"
-        stroke-width="2"
-      >
-        <title>{{ g.player || 'Gol' }} ({{ g.minute }}')</title>
-      </circle>
+      <circle v-if="minute != null" :cx="liveX" cy="6" r="6" fill="#ef4444" />
 
-      <template v-for="t in TICKS" :key="`${t.half}-${t.minute}`">
-        <line :x1="tickX(t)" y1="51" :x2="tickX(t)" y2="59" stroke="#3f3f46" />
+      <g transform="translate(0 56)">
+        <rect x="0" y="0" :width="W1" height="110" fill="#27272a" />
 
-        <text :x="Math.min(tickX(t), 620)" y="135" font-size="18" fill="#52525b" text-anchor="middle">
-          {{ t.minute }}'
-        </text>
-      </template>
+        <rect :x="P2" y="0" :width="W2" height="110" fill="#27272a" />
+
+        <rect x="0" y="33" width="640" height="22" fill="#fafafa" opacity="0.05" />
+
+        <rect x="0" y="55" width="640" height="22" fill="#fafafa" opacity="0.05" />
+
+        <line class="lane-threshold" x1="0" y1="33" x2="640" y2="33" stroke="#52525b" stroke-width="1" />
+
+        <line class="lane-threshold" x1="0" y1="77" x2="640" y2="77" stroke="#52525b" stroke-width="1" />
+
+        <line x1="0" y1="55" x2="640" y2="55" stroke="#52525b" stroke-width="1.5" />
+
+        <rect
+          v-for="b in bars"
+          :key="`${halfOf(b)}-${b.minute}`"
+          class="momentum-bar"
+          :x="barX(b)"
+          :y="barY(b)"
+          width="5"
+          :height="barHeight(b)"
+          rx="1.5"
+          :fill="Number(b.home) > 0 ? '#2dd4bf' : '#3b82f6'"
+          opacity="0.85"
+        />
+
+        <template v-for="t in TICKS" :key="`${t.half}-${t.minute}`">
+          <line :x1="tickX(t)" y1="51" :x2="tickX(t)" y2="59" stroke="#3f3f46" />
+
+          <text :x="Math.min(tickX(t), 620)" y="135" font-size="18" fill="#52525b" text-anchor="middle">
+            {{ t.minute }}'
+          </text>
+        </template>
+      </g>
     </svg>
 
     <p v-else class="py-6 text-center text-xs text-zinc-500">aguardando dados do gráfico</p>
@@ -54,9 +129,14 @@
 </template>
 
 <script setup>
+import { BALL_PATH, groupIncidents, layoutLane } from '~/utils/scannerIncidents'
+
 const props = defineProps({
   bars: { type: Array, default: () => [] },
   goals: { type: Array, default: () => [] },
+  shots: { type: Array, default: () => [] },
+  notifications: { type: Array, default: () => [] },
+  minute: { type: Number, default: null },
 })
 
 // Geometria do gráfico do Flashscore (viewBox 640x158, centro em 55):
@@ -128,4 +208,42 @@ function barHeight(b) {
 function barY(b) {
   return Number(b.home) > 0 ? CENTER - barHeight(b) : CENTER
 }
+
+// Faixa de incidentes (y 0..56): grupos por minuto via util da Task 1,
+// x verdadeiro pelo barX do grupo. Nome consumido pela Task 3 (popover).
+const laneItems = computed(() =>
+  layoutLane(groupIncidents({ shots: props.shots, goals: props.goals, notifications: props.notifications }), (g) =>
+    barX({ minute: g.minute, half: g.half }),
+  ),
+)
+
+const liveX = computed(() => {
+  if (props.minute == null) return null
+  return barX({ minute: props.minute, half: props.minute > 45 ? 2 : 1 })
+})
+
+function teamColor(team) {
+  return team === 'home' ? '#2dd4bf' : '#3b82f6'
+}
+
+// Bola Packball (viewBox 512) centrada em (x, 26) com ~21px de diâmetro.
+const BALL_S = 17 / 416
+function ballTransform(x) {
+  const offset = 26 - 256 * BALL_S
+  return `translate(${x - 256 * BALL_S} ${offset}) scale(${BALL_S})`
+}
+
+function diamondD(x) {
+  return `M ${x} 16 L ${x + 10} 26 L ${x} 36 L ${x - 10} 26 Z`
+}
 </script>
+
+<style scoped>
+.lane-threshold {
+  stroke-dasharray: 6 5;
+}
+
+.lane-live {
+  stroke-dasharray: 6 4;
+}
+</style>
