@@ -6,10 +6,12 @@
       <div
         data-testid="rz-grip"
         title="Arrastar para ajustar a largura"
-        class="absolute top-0 -right-2 hidden h-full w-4 cursor-ew-resize items-center justify-center opacity-0 transition-opacity hover:opacity-100 lg:flex"
+        class="absolute top-0 -right-3 hidden h-full w-5 cursor-ew-resize items-center justify-center opacity-60 transition-opacity hover:opacity-100 lg:flex"
         @mousedown="onDown"
       >
-        <span class="h-16 w-1 rounded-full bg-zinc-700" />
+        <span class="flex h-20 flex-col items-center justify-center gap-1 rounded-full bg-zinc-800/80 px-1.5 py-2">
+          <span v-for="i in 6" :key="i" class="h-1 w-1 rounded-full bg-zinc-500" />
+        </span>
       </div>
     </div>
   </div>
