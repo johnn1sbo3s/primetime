@@ -55,36 +55,83 @@ export function groupIncidents({ shots = [], goals = [], notifications = [] } = 
 
 // Lado da faixa: gol e chute herdam o time; alerta (sem time) vai pro lado
 // que pressionava no minuto (barra com maior valor; empate ou sem barra = casa).
-export function sideOf(group, bars) {
-  if (group?.goal) return group.goal.team === 'away' ? 'away' : 'home'
-  if (group?.shots?.length > 0) return group.shots[0].team === 'away' ? 'away' : 'home'
+export function pressureSide(minute, half, bars) {
   const list = Array.isArray(bars) ? bars : []
-  const bar = list.find((b) => Number(b?.minute) === Number(group?.minute) && halfOf(b) === halfOf(group))
+  const h = Number(half) === 2 ? 2 : 1
+  const bar =
+    list.find((b) => Number(b?.minute) === Number(minute) && halfOf(b) === h) ??
+    list.find((b) => Number(b?.minute) === Number(minute))
   const home = Number(bar?.home) || 0
   const away = Number(bar?.away) || 0
   return away > home ? 'away' : 'home'
 }
 
-// Empilhamento vertical: x nunca muda (minuto sempre legível, sem linhas).
-// Fileira 0 por padrão; vizinho a menos de pitch sobe pra fileira 1;
-// terceiro no mesmo ponto funde os incidentes no vizinho (+N do keeper soma
-// os escondidos do fundido + 1). O minuto fundido perde o popover próprio.
-export function stackRows(entries, pitch = 26) {
-  const sorted = [...entries].sort((a, b) => a.x - b.x)
-  const placed = []
-  const rows = [[], []]
-  for (const it of sorted) {
-    const free = rows.findIndex((xs) => xs.every((v) => Math.abs(it.x - v) >= pitch))
-    if (free === -1) {
-      let keeper = placed[0]
-      for (const p of placed) {
-        if (Math.abs(it.x - p.x) < Math.abs(it.x - keeper.x)) keeper = p
-      }
-      keeper.group.extra = (keeper.group.extra || 0) + (it.group.extra || 0) + 1
-      continue
+export function sideOf(group, bars) {
+  if (group?.goal) return group.goal.team === 'away' ? 'away' : 'home'
+  if (group?.shots?.length > 0) return group.shots[0].team === 'away' ? 'away' : 'home'
+  return pressureSide(group?.minute, group?.half, bars)
+}
+
+// Trilhas por time e tipo: gol vai pra trilha de gols, chutes+alertas pra
+// trilha de chutes (alerta segue a pressão do minuto). x exato via xOf;
+// vizinhos da mesma trilha a menos de pitch fundem no mais antigo (o popover
+// lista todos os minutos fundidos). Sem linhas-guia.
+export function buildTracks({ shots = [], goals = [], notifications = [] } = {}, bars = [], xOf = () => 0, pitch = 20) {
+  const groups = groupIncidents({ shots, goals, notifications })
+  const items = []
+  for (const g of groups) {
+    const x = xOf(g)
+    if (g.goal) {
+      items.push({
+        kind: 'goal',
+        minute: g.minute,
+        half: g.half,
+        team: g.goal.team,
+        x,
+        groups: [{ ...g, shots: [], alerts: [] }],
+      })
     }
-    rows[free].push(it.x)
-    placed.push({ group: it.group, x: it.x, row: free })
+    for (const team of ['home', 'away']) {
+      const teamShots = g.shots.filter((s) => s.team === team)
+      const teamAlerts = g.alerts.filter(() => pressureSide(g.minute, g.half, bars) === team)
+      if (teamShots.length === 0 && teamAlerts.length === 0) continue
+      const all = [...teamShots].sort((a, b) => DANGER[a.tier] - DANGER[b.tier])
+      items.push({
+        kind: 'shots',
+        minute: g.minute,
+        half: g.half,
+        team,
+        x,
+        groups: [{ ...g, shots: all, alerts: teamAlerts }],
+      })
+    }
   }
-  return placed
+  const byTrack = new Map()
+  for (const it of items) {
+    const key = it.team + ':' + it.kind
+    if (!byTrack.has(key)) byTrack.set(key, [])
+    byTrack.get(key).push(it)
+  }
+  const out = []
+  for (const list of byTrack.values()) {
+    list.sort((a, b) => a.x - b.x)
+    let keeper = null
+    for (const it of list) {
+      if (keeper && it.x - keeper.x < pitch) {
+        keeper.groups.push(...it.groups)
+        continue
+      }
+      keeper = it
+      out.push(keeper)
+    }
+  }
+  for (const it of out) {
+    const shots = it.groups.flatMap((g) => g.shots).sort((a, b) => DANGER[a.tier] - DANGER[b.tier])
+    const alerts = it.groups.flatMap((g) => g.alerts)
+    const total = shots.length + alerts.length + (it.kind === 'goal' ? it.groups.length : 0)
+    it.shownShot = shots[0] ?? null
+    it.extra = total - 1
+  }
+  out.sort((a, b) => a.half - b.half || a.minute - b.minute)
+  return out
 }

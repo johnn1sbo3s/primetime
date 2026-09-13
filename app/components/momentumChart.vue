@@ -11,109 +11,92 @@
       <line x1="0" y1="56" x2="640" y2="56" stroke="#3f3f46" stroke-width="1" />
 
       <template v-for="lane in lanes" :key="lane.key">
-        <template v-for="item in lane.items" :key="item.group.half + ':' + item.group.minute">
+        <template v-for="item in lane.items" :key="trackKey(item)">
           <g
-            v-if="item.group.winner === 'shot'"
+            v-if="item.kind === 'shots' && item.shownShot"
             class="lane-shot"
             tabindex="0"
-            @mouseenter="activeKey = minKey(item.group)"
+            @mouseenter="activeKey = trackKey(item)"
             @mouseleave="activeKey = null"
-            @focus="activeKey = minKey(item.group)"
+            @focus="activeKey = trackKey(item)"
             @blur="activeKey = null"
-            @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
+            @click.stop="activeKey = activeKey === trackKey(item) ? null : trackKey(item)"
           >
-            <circle :cx="item.x" :cy="lane.rows[item.row]" r="14" fill="transparent" />
+            <circle :cx="item.x" :cy="lane.cy" r="14" fill="transparent" />
 
             <circle
               :cx="item.x"
-              :cy="lane.rows[item.row]"
+              :cy="lane.cy"
               r="10"
               fill="#27272a"
-              :stroke="teamColor(item.group.shots[0].team)"
+              :stroke="teamColor(item.team)"
               stroke-width="2.5"
             />
 
             <text
               :x="item.x"
-              :y="lane.rows[item.row]"
+              :y="lane.cy"
               text-anchor="middle"
               dominant-baseline="central"
               font-size="14"
               font-weight="bold"
               fill="#ffffff"
             >
-              {{ item.group.shots[0].tier.slice(1) }}
+              {{ item.shownShot.tier.slice(1) }}
             </text>
           </g>
 
           <g
-            v-else-if="item.group.winner === 'goal'"
+            v-else-if="item.kind === 'goal'"
             class="lane-goal"
             tabindex="0"
-            @mouseenter="activeKey = minKey(item.group)"
+            @mouseenter="activeKey = trackKey(item)"
             @mouseleave="activeKey = null"
-            @focus="activeKey = minKey(item.group)"
+            @focus="activeKey = trackKey(item)"
             @blur="activeKey = null"
-            @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
+            @click.stop="activeKey = activeKey === trackKey(item) ? null : trackKey(item)"
           >
-            <circle :cx="item.x" :cy="lane.rows[item.row]" r="14" fill="transparent" />
+            <circle :cx="item.x" :cy="lane.cy" r="14" fill="transparent" />
 
-            <circle :cx="item.x" :cy="lane.rows[item.row]" r="10" fill="#f4f4f5" />
+            <circle :cx="item.x" :cy="lane.cy" r="10" fill="#f4f4f5" />
 
-            <path
-              :d="BALL_PATH"
-              :fill="teamColor(item.group.goal.team)"
-              :transform="ballTransform(item.x, lane.rows[item.row])"
-            />
+            <path :d="BALL_PATH" :fill="teamColor(item.team)" :transform="ballTransform(item.x, lane.cy)" />
           </g>
 
           <g
             v-else
             class="lane-alert"
             tabindex="0"
-            @mouseenter="activeKey = minKey(item.group)"
+            @mouseenter="activeKey = trackKey(item)"
             @mouseleave="activeKey = null"
-            @focus="activeKey = minKey(item.group)"
+            @focus="activeKey = trackKey(item)"
             @blur="activeKey = null"
-            @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
+            @click.stop="activeKey = activeKey === trackKey(item) ? null : trackKey(item)"
           >
-            <circle :cx="item.x" :cy="lane.rows[item.row]" r="14" fill="transparent" />
+            <circle :cx="item.x" :cy="lane.cy" r="14" fill="transparent" />
 
-            <path :d="diamondD(item.x, lane.rows[item.row])" fill="none" stroke="#fbbf24" stroke-width="2" />
+            <path :d="diamondD(item.x, lane.cy)" fill="none" stroke="#fbbf24" stroke-width="2" />
           </g>
 
-          <g v-if="item.group.extra > 0" class="lane-more">
-            <circle :cx="item.x + 19" :cy="lane.rows[item.row] - 12" r="9" fill="#52525b" />
+          <g v-if="item.extra > 0" class="lane-more">
+            <circle :cx="item.x + 19" :cy="lane.cy + lane.badgeDy" r="9" fill="#52525b" />
 
             <text
               :x="item.x + 19"
-              :y="lane.rows[item.row] - 12"
+              :y="lane.cy + lane.badgeDy"
               text-anchor="middle"
               dominant-baseline="central"
               font-size="11"
               font-weight="bold"
               fill="#ffffff"
             >
-              +{{ item.group.extra }}
+              +{{ item.extra }}
             </text>
           </g>
         </template>
       </template>
 
       <line x1="0" y1="196" x2="640" y2="196" stroke="#3f3f46" stroke-width="1" />
-
-      <line
-        v-if="minute != null"
-        class="lane-live"
-        :x1="liveX"
-        y1="0"
-        :x2="liveX"
-        y2="196"
-        stroke="#ef4444"
-        stroke-width="2"
-      />
-
-      <circle v-if="minute != null" :cx="liveX" cy="6" r="6" fill="#ef4444" />
 
       <g transform="translate(0 56)">
         <rect x="0" y="0" :width="W1" height="110" fill="#27272a" />
@@ -136,7 +119,7 @@
           class="momentum-bar"
           :x="barX(b)"
           :y="barY(b)"
-          width="5"
+          width="6"
           :height="barHeight(b)"
           rx="1.5"
           :fill="Number(b.home) > 0 ? '#2dd4bf' : '#3b82f6'"
@@ -156,29 +139,30 @@
     <p v-else class="py-6 text-center text-xs text-zinc-500">aguardando dados do gráfico</p>
 
     <div
-      v-if="activeGroup"
+      v-if="activeTrack"
       class="lane-pop absolute top-0 left-1/2 z-10 max-w-60 -translate-x-1/2 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-zinc-100 shadow-lg"
     >
-      <p class="font-bold">{{ activeGroup.minute }}'</p>
+      <template v-for="g in activeTrack.groups" :key="g.half + ':' + g.minute">
+        <p class="font-bold">{{ g.minute }}'</p>
 
-      <p v-if="activeGroup.goal">{{ goalLabel(activeGroup.goal) }}</p>
+        <p v-if="g.goal">{{ goalLabel(g.goal) }}</p>
 
-      <p v-for="(s, i) in activeGroup.shots" :key="'shot' + i">{{ shotLabel(s) }}</p>
+        <p v-for="(s, i) in g.shots" :key="'shot' + i">{{ shotLabel(s) }}</p>
 
-      <p v-for="(a, i) in activeGroup.alerts" :key="'alert' + i">{{ a.label }}</p>
+        <p v-for="(a, i) in g.alerts" :key="'alert' + i">{{ a.label }}</p>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { BALL_PATH, groupIncidents, sideOf, stackRows } from '~/utils/scannerIncidents'
+import { BALL_PATH, buildTracks } from '~/utils/scannerIncidents'
 
 const props = defineProps({
   bars: { type: Array, default: () => [] },
   goals: { type: Array, default: () => [] },
   shots: { type: Array, default: () => [] },
   notifications: { type: Array, default: () => [] },
-  minute: { type: Number, default: null },
 })
 
 // Geometria do gráfico do Flashscore (viewBox 640x158, centro em 55):
@@ -190,7 +174,7 @@ const TICKS = [
   { half: 1, minute: 15 },
   { half: 1, minute: 30 },
   { half: 1, minute: 45 },
-  { half: 2, minute: 50 },
+  { half: 2, minute: 60 },
   { half: 2, minute: 75 },
   { half: 2, minute: 90 },
 ]
@@ -251,29 +235,25 @@ function barY(b) {
   return Number(b.home) > 0 ? CENTER - barHeight(b) : CENTER
 }
 
-// Faixas por lado (casa em cima, fora embaixo): grupos via util, x exato pelo
-// barX, empilhamento vertical quando colidem. Nome laneItems consumido pelo
-// popover.
+// Quatro trilhas: gol/shots da casa em cima, shots/gol de fora embaixo.
+// x exato pelo barX; vizinhos da mesma trilha fundem (popover lista os
+// minutos fundidos). laneItems alimenta o popover.
 const lanes = computed(() => {
-  const groups = groupIncidents({ shots: props.shots, goals: props.goals, notifications: props.notifications })
-  const top = []
-  const bot = []
-  for (const g of groups) {
-    const entry = { group: g, x: barX({ minute: g.minute, half: g.half }) }
-    if (sideOf(g, props.bars) === 'home') top.push(entry)
-    else bot.push(entry)
-  }
+  const tracks = buildTracks(
+    { shots: props.shots, goals: props.goals, notifications: props.notifications },
+    props.bars,
+    (g) => barX({ minute: g.minute, half: g.half }),
+  )
+  const of = (team, kind) => tracks.filter((t) => t.team === team && t.kind === kind)
   return [
-    { key: 'top', rows: [23, 43], items: stackRows(top) },
-    { key: 'bot', rows: [212, 234], items: stackRows(bot) },
+    { key: 'gH', cy: 16, badgeDy: -22, items: of('home', 'goal') },
+    { key: 'sH', cy: 40, badgeDy: -22, items: of('home', 'shots') },
+    { key: 'sA', cy: 216, badgeDy: 22, items: of('away', 'shots') },
+    { key: 'gA', cy: 240, badgeDy: -22, items: of('away', 'goal') },
   ]
 })
 const laneItems = computed(() => lanes.value.flatMap((l) => l.items))
-
-const liveX = computed(() => {
-  if (props.minute == null) return null
-  return barX({ minute: props.minute, half: props.minute > 45 ? 2 : 1 })
-})
+const trackKey = (t) => t.half + ':' + t.minute + ':' + t.team + ':' + t.kind
 
 function teamColor(team) {
   return team === 'home' ? '#2dd4bf' : '#3b82f6'
@@ -289,13 +269,10 @@ function diamondD(x, cy) {
   return `M ${x} ${cy - 10} L ${x + 10} ${cy} L ${x} ${cy + 10} L ${x - 10} ${cy} Z`
 }
 
-// Popover do minuto: chave half:minuto do grupo ativo.
+// Popover da trilha: lista todos os minutos fundidos no item.
 // Gol mostra só o time, nunca o jogador.
 const activeKey = ref(null)
-const minKey = (g) => g.half + ':' + g.minute
-const activeGroup = computed(
-  () => laneItems.value.map((i) => i.group).find((g) => minKey(g) === activeKey.value) || null,
-)
+const activeTrack = computed(() => laneItems.value.find((i) => trackKey(i) === activeKey.value) || null)
 function goalLabel(goal) {
   return goal.team === 'home' ? 'Gol — casa' : 'Gol — fora'
 }
@@ -307,9 +284,5 @@ function shotLabel(s) {
 <style scoped>
 .lane-threshold {
   stroke-dasharray: 6 5;
-}
-
-.lane-live {
-  stroke-dasharray: 6 4;
 }
 </style>

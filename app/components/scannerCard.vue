@@ -168,7 +168,6 @@
           :goals="game.goals"
           :shots="chartShots"
           :notifications="game.notifications ?? []"
-          :minute="game.minute"
           class="mb-3"
         />
 

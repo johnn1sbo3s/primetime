@@ -343,7 +343,7 @@ describe('ScannerCard', () => {
     expect(rowValues(wrapper, 'C3')).toEqual({ home: '—', away: '—' })
   })
 
-  it('repassa shots/notifications/minute ao MomentumChart', async () => {
+  it('repassa shots/notifications ao MomentumChart', async () => {
     const wrapper = await mountCard(ScannerCard, {
       props: {
         game: {
@@ -356,7 +356,6 @@ describe('ScannerCard', () => {
       },
     })
     const chart = wrapper.findComponent(MomentumChart)
-    expect(chart.props('minute')).toBe(35)
     expect(chart.props('notifications')).toHaveLength(1)
     expect(chart.props('shots')).toEqual([{ minute: 35, team: 'home', xg_delta: 0.3, tier: 'C2', label: 'Boa chance' }])
   })

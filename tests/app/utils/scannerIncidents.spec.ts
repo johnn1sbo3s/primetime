@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { groupIncidents, sideOf, stackRows } from '~/utils/scannerIncidents'
+import { buildTracks, groupIncidents, sideOf } from '~/utils/scannerIncidents'
 
 describe('groupIncidents', () => {
   it('agrupa chute+gol+alerta do mesmo minuto com prioridade do gol', () => {
@@ -37,7 +37,7 @@ describe('groupIncidents', () => {
   })
 })
 
-describe('sideOf + stackRows', () => {
+describe('sideOf + buildTracks', () => {
   it('gol e chute herdam o lado do time; alerta segue a pressão do minuto', () => {
     const bars = [
       { minute: 35, half: 1, home: 0.8, away: 0.1 },
@@ -65,33 +65,51 @@ describe('sideOf + stackRows', () => {
     expect(sideOf(alertHome, [])).toBe('home')
   })
 
-  it('sem colisão, tudo na fileira 0 com x exato', () => {
-    const placed = stackRows([
-      { group: { minute: 10 }, x: 100 },
-      { group: { minute: 20 }, x: 200 },
-    ])
-    expect(placed).toHaveLength(2)
-    expect(placed.every((p) => p.row === 0)).toBe(true)
-    expect(placed.map((p) => p.x).sort((a, b) => a - b)).toEqual([100, 200])
+  it('minuto com chute + alerta vira item shots com +1', () => {
+    const tracks = buildTracks(
+      {
+        shots: [{ minute: 20, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
+        goals: [],
+        notifications: [{ rule: 'r', label: 'Pico', minute: 20, at: 't' }],
+      },
+      [{ minute: 20, half: 1, home: 0.8, away: 0.1 }],
+      (g) => g.minute * 10,
+    )
+    expect(tracks).toHaveLength(1)
+    expect(tracks[0].kind).toBe('shots')
+    expect(tracks[0].team).toBe('home')
+    expect(tracks[0].extra).toBe(1)
   })
 
-  it('vizinhos colidem: segunda fileira, x intacto', () => {
-    const placed = stackRows([
-      { group: { minute: 42 }, x: 280 },
-      { group: { minute: 43 }, x: 287 },
-    ])
-    expect(placed.map((p) => p.row).sort()).toEqual([0, 1])
-    expect(placed.map((p) => p.x).sort((a, b) => a - b)).toEqual([280, 287])
+  it('gol vai pra trilha própria mesmo com chute no minuto', () => {
+    const tracks = buildTracks(
+      {
+        shots: [{ minute: 43, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
+        goals: [{ minute: 43, team: 'home', player: 'x' }],
+        notifications: [],
+      },
+      [],
+      (g) => g.minute * 10,
+    )
+    expect(tracks.map((t) => t.kind).sort()).toEqual(['goal', 'shots'])
   })
 
-  it('terceiro no mesmo ponto funde o extra no vizinho', () => {
-    const placed = stackRows([
-      { group: { minute: 42, extra: 0 }, x: 280 },
-      { group: { minute: 43, extra: 0 }, x: 287 },
-      { group: { minute: 44, extra: 2 }, x: 290 },
-    ])
-    expect(placed).toHaveLength(2)
-    const keeper = placed.find((p) => p.group.minute === 43)
-    expect(keeper.group.extra).toBe(3)
+  it('vizinhos da mesma trilha fundem com popover cobrindo os dois minutos', () => {
+    const tracks = buildTracks(
+      {
+        shots: [
+          { minute: 42, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' },
+          { minute: 43, team: 'home', tier: 'C3', xg_delta: 0.1, label: 'Chance média' },
+        ],
+        goals: [],
+        notifications: [],
+      },
+      [],
+      (g) => g.minute * 10,
+    )
+    expect(tracks).toHaveLength(1)
+    expect(tracks[0].x).toBe(420)
+    expect(tracks[0].groups.map((g) => g.minute)).toEqual([42, 43])
+    expect(tracks[0].extra).toBe(1)
   })
 })

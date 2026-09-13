@@ -35,7 +35,6 @@ describe('MomentumChart', () => {
         goals: [{ minute: 43, stoppage_time: 0, team: 'home', player: 'x' }],
         shots: [{ minute: 35, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
         notifications: [],
-        minute: 45,
       },
     })
     expect(wrapper.findAll('.lane-shot').length).toBe(1)
@@ -43,18 +42,18 @@ describe('MomentumChart', () => {
     expect(wrapper.find('.lane-goal path').exists()).toBe(true)
   })
 
-  it('colisão no mesmo minuto: +N', async () => {
+  it('gol e chute do mesmo minuto vão pra trilhas separadas', async () => {
     const wrapper = await mountSuspended(MomentumChart, {
       props: {
         bars: [{ minute: 43, home: 0.5, away: 0 }],
         goals: [{ minute: 43, stoppage_time: 0, team: 'home', player: 'x' }],
         shots: [{ minute: 43, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
         notifications: [],
-        minute: 45,
       },
     })
-    expect(wrapper.find('.lane-more').exists()).toBe(true)
-    expect(wrapper.find('.lane-more text').text()).toBe('+1')
+    expect(wrapper.find('.lane-goal').exists()).toBe(true)
+    expect(wrapper.find('.lane-shot').exists()).toBe(true)
+    expect(wrapper.find('.lane-more').exists()).toBe(false)
   })
 
   it('casa em cima, fora embaixo', async () => {
@@ -67,7 +66,6 @@ describe('MomentumChart', () => {
           { minute: 30, team: 'away', tier: 'C1', xg_delta: 0.6, label: 'Grande chance' },
         ],
         notifications: [],
-        minute: 40,
       },
     })
     const homeCy = Number(wrapper.find('.lane-shot circle[r="10"]').attributes('cy'))
@@ -76,7 +74,7 @@ describe('MomentumChart', () => {
     expect(awayCy).toBeGreaterThan(150)
   })
 
-  it('vizinhos do mesmo lado empilham sem sair do minuto', async () => {
+  it('vizinhos da mesma trilha fundem num marcador só com os dois minutos no popover', async () => {
     const wrapper = await mountSuspended(MomentumChart, {
       props: {
         bars: [
@@ -89,20 +87,12 @@ describe('MomentumChart', () => {
           { minute: 43, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' },
         ],
         notifications: [],
-        minute: 45,
       },
     })
-    const cys = wrapper.findAll('.lane-shot circle[r="10"]').map((c) => c.attributes('cy'))
-    expect(cys).toHaveLength(2)
-    expect(cys[0]).not.toBe(cys[1])
-    expect(wrapper.find('line[stroke="#a1a1aa"]').exists()).toBe(false)
-  })
-
-  it('linha ao vivo no minuto atual', async () => {
-    const wrapper = await mountSuspended(MomentumChart, {
-      props: { bars: [{ minute: 45, home: 0.5, away: 0 }], minute: 45 },
-    })
-    expect(wrapper.find('.lane-live').exists()).toBe(true)
+    expect(wrapper.findAll('.lane-shot')).toHaveLength(1)
+    await wrapper.find('.lane-shot').trigger('mouseenter')
+    expect(wrapper.find('.lane-pop').text()).toContain("42'")
+    expect(wrapper.find('.lane-pop').text()).toContain("43'")
   })
 
   it('faixa 0.4: tracejados do limiar', async () => {
@@ -135,12 +125,12 @@ describe('MomentumChart', () => {
     expect(x).toBeCloseTo(59 * (632 / 95), 1) // (60-1)*STEP
   })
 
-  it('ticks 15/30/45 no 1ºT e 50/75/90 no 2ºT', async () => {
+  it('ticks 15/30/45 no 1ºT e 60/75/90 no 2ºT', async () => {
     const wrapper = await mountSuspended(MomentumChart, {
       props: { bars: [{ minute: 1, half: 1, home: 0.5, away: 0 }] },
     })
     const labels = wrapper.findAll('text').map((t) => t.text())
-    expect(labels).toEqual(["15'", "30'", "45'", "50'", "75'", "90'"])
+    expect(labels).toEqual(["15'", "30'", "45'", "60'", "75'", "90'"])
   })
 
   it('fundo zinc-800 nos dois painéis, separados pelo gap', async () => {
@@ -196,7 +186,6 @@ describe('MomentumChart', () => {
         goals: [],
         shots: [{ minute: 35, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
         notifications: [{ rule: 'r', label: 'Pico do favorito', minute: 35, at: 't' }],
-        minute: 40,
       },
     })
     expect(wrapper.find('.lane-pop').exists()).toBe(false)
@@ -215,7 +204,6 @@ describe('MomentumChart', () => {
         goals: [],
         shots: [{ minute: 35, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
         notifications: [],
-        minute: 40,
       },
     })
     await wrapper.find('.lane-shot').trigger('click')
