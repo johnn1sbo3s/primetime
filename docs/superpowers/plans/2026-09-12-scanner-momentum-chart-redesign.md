@@ -498,3 +498,9 @@ Mudanças (já implementadas em `9d82a26`):
 - `app/utils/scannerIncidents.js`: `layoutLane` removido; `sideOf(group, bars)` (gol/chute herdam o time, alerta segue a pressão do minuto) + `stackRows(entries, pitch=26)` (x nunca muda; fileira 1 em colisão; 3º funde `extra` no vizinho).
 - `app/components/momentumChart.vue`: `lanes` (top rows `[23,43]`, bot rows `[212,234]`), viewBox `640x252`, sem líderes, sem balões (hit circle r14 transparente), linha ao vivo até `y=196`.
 - Specs atualizados; suíte 338 verde.
+
+---
+
+### Task 6 (pós-smoke): 4 trilhas, ticks 60/75/90, barras w6, sem linha ao vivo
+
+Pedido direto do usuário no smoke: barras mais grossas (5→6); duas trilhas por time (gols + chutes/alertas, casa em cima e fora embaixo, alerta segue a pressão do minuto); ticks do 2ºT 60/75/90; linha vermelha removida (ficava atrás e atrasada). Implementado em `722d8fb`: `buildTracks` substitui `layoutLane`/`stackRows` (merge de vizinhos com popover multi-minuto), badge sempre acima do marcador (abaixo só na trilha de chutes de fora).
