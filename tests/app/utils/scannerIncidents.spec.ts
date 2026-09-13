@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildTracks, groupIncidents, sideOf } from '~/utils/scannerIncidents'
+import { buildTracks, groupIncidents, sideOf, snapShotsToGoals } from '~/utils/scannerIncidents'
 
 describe('groupIncidents', () => {
   it('agrupa chute+gol+alerta do mesmo minuto com prioridade do gol', () => {
@@ -111,5 +111,19 @@ describe('sideOf + buildTracks', () => {
     expect(tracks[0].x).toBe(420)
     expect(tracks[0].groups.map((g) => g.minute)).toEqual([42, 43])
     expect(tracks[0].extra).toBe(1)
+  })
+
+  it('snap: chute do mesmo time a 1min do gol assume minuto e half do gol', () => {
+    const shots = [
+      { minute: 42, half: 1, team: 'home', tier: 'C2', xg_delta: 0.3 },
+      { minute: 41, half: 1, team: 'away', tier: 'C2', xg_delta: 0.3 },
+      { minute: 40, half: 1, team: 'home', tier: 'C2', xg_delta: 0.3 },
+    ]
+    const goals = [{ minute: 43, half: 1, team: 'home', player: 'x' }]
+    const out = snapShotsToGoals(shots, goals)
+    expect(out[0].minute).toBe(43)
+    expect(out[0].half).toBe(1)
+    expect(out[1].minute).toBe(41)
+    expect(out[2].minute).toBe(40)
   })
 })

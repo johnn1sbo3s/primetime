@@ -132,6 +132,32 @@ export function buildTracks({ shots = [], goals = [], notifications = [] } = {},
     it.shownShot = shots[0] ?? null
     it.extra = total - 1
   }
+
   out.sort((a, b) => a.half - b.half || a.minute - b.minute)
   return out
+}
+
+// O xG amostra a cada ~60s e o gol tem minuto próprio: o chute que gerou o
+// gol costuma cair 1' antes/depois. Chute C1–C3 do mesmo time a ≤1min de um
+// gol assume minuto+half do gol (cópia, nunca muta a entrada).
+export function snapShotsToGoals(shots, goals) {
+  const list = Array.isArray(shots) ? shots : []
+  const gs = (Array.isArray(goals) ? goals : []).filter((g) => g && Number.isFinite(Number(g.minute)))
+  return list.map((s) => {
+    if (!s || typeof s !== 'object') return s
+    const m = Number(s.minute)
+    if (!Number.isFinite(m)) return s
+    let best = null
+    let bestDist = 1
+    for (const g of gs) {
+      if ((g.team ?? null) !== (s.team ?? null) || g.team == null) continue
+      const d = Math.abs(Number(g.minute) - m)
+      if (d <= bestDist) {
+        bestDist = d
+        best = g
+      }
+    }
+    if (!best) return s
+    return { ...s, minute: Number(best.minute), half: halfOf(best) }
+  })
 }

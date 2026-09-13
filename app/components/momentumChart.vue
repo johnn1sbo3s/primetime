@@ -144,20 +144,18 @@
       :style="{ left: popLeft, top: popTop, bottom: popBottom }"
     >
       <template v-for="g in activeTrack.groups" :key="g.half + ':' + g.minute">
-        <p class="font-bold">{{ g.minute }}'</p>
+        <p v-if="g.goal">{{ g.minute }}' — {{ goalLabel(g.goal) }}</p>
 
-        <p v-if="g.goal">{{ goalLabel(g.goal) }}</p>
+        <p v-for="(s, i) in g.shots" :key="'shot' + i">{{ shotRow(g.minute, s) }}</p>
 
-        <p v-for="(s, i) in g.shots" :key="'shot' + i">{{ shotLabel(s) }}</p>
-
-        <p v-for="(a, i) in g.alerts" :key="'alert' + i">{{ a.label }}</p>
+        <p v-for="(a, i) in g.alerts" :key="'alert' + i">{{ g.minute }}' — {{ a.label }} (alerta)</p>
       </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { BALL_PATH, buildTracks } from '~/utils/scannerIncidents'
+import { BALL_PATH, buildTracks, snapShotsToGoals } from '~/utils/scannerIncidents'
 
 const props = defineProps({
   bars: { type: Array, default: () => [] },
@@ -241,7 +239,7 @@ function barY(b) {
 // minutos fundidos). laneItems alimenta o popover.
 const lanes = computed(() => {
   const tracks = buildTracks(
-    { shots: props.shots, goals: props.goals, notifications: props.notifications },
+    { shots: snapShotsToGoals(props.shots, props.goals), goals: props.goals, notifications: props.notifications },
     props.bars,
     (g) => barX({ minute: g.minute, half: g.half }),
   )
@@ -286,8 +284,11 @@ const popBottom = computed(() => (activeTrack.value && activeTrack.value.team !=
 function goalLabel(goal) {
   return goal.team === 'home' ? 'Gol — casa' : 'Gol — fora'
 }
-function shotLabel(s) {
-  return s.label || `Chance ${s.tier}`
+function shotRow(minute, s) {
+  const team = s.team === 'away' ? 'fora' : 'casa'
+  const label = s.label || `Chance ${s.tier}`
+  const xg = Number.isFinite(Number(s.xg_delta)) ? ` (xG +${Number(s.xg_delta).toFixed(2)})` : ''
+  return `${minute}' — ${s.tier} ${team} — ${label}${xg}`
 }
 </script>
 

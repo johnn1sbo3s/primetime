@@ -192,7 +192,7 @@ describe('MomentumChart', () => {
     await wrapper.find('.lane-shot').trigger('mouseenter')
     expect(wrapper.find('.lane-pop').exists()).toBe(true)
     expect(wrapper.find('.lane-pop').text()).toContain("35'")
-    // 35' no chart simétrico: x=(35-1)*632/90 → 37.3% (não mais fixo no meio)
+    expect(wrapper.find('.lane-pop').text()).toContain('xG +0.30')
     expect(parseFloat(wrapper.find('.lane-pop').element.style.left)).toBeCloseTo(37.3, 1)
     await wrapper.find('.lane-shot').trigger('mouseleave')
     expect(wrapper.find('.lane-pop').exists()).toBe(false)
@@ -229,5 +229,22 @@ describe('MomentumChart', () => {
     expect(pop.element.style.top).toBe('auto')
     expect(pop.element.style.bottom).toBe('18%')
     expect(pop.classes()).toContain('pointer-events-none')
+  })
+
+  it('chute desalinhado do gol gruda no minuto do gol', async () => {
+    const wrapper = await mountSuspended(MomentumChart, {
+      props: {
+        bars: [
+          { minute: 42, home: 0.5, away: 0 },
+          { minute: 43, home: 0.6, away: 0 },
+        ],
+        goals: [{ minute: 43, stoppage_time: 0, team: 'home', player: 'x' }],
+        shots: [{ minute: 42, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
+        notifications: [],
+      },
+    })
+    const goalCx = wrapper.find('.lane-goal circle[r="10"]').attributes('cx')
+    const shotCx = wrapper.find('.lane-shot circle[r="10"]').attributes('cx')
+    expect(shotCx).toBe(goalCx)
   })
 })
