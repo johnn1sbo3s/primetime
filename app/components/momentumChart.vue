@@ -75,15 +75,15 @@
           >
             <circle :cx="item.x" :cy="lane.cy" r="14" fill="transparent" />
 
-            <path :d="diamondD(item.x, lane.cy)" fill="none" stroke="#fbbf24" stroke-width="2" />
+            <path :d="diamondD(item.x, lane.cy)" fill="#fbbf24" />
           </g>
 
           <g v-if="item.extra > 0" class="lane-more">
-            <circle :cx="item.x + 19" :cy="lane.cy + lane.badgeDy" r="9" fill="#52525b" />
+            <circle :cx="item.x + 10" :cy="lane.cy + lane.badgeDir * 10" r="9" fill="#52525b" />
 
             <text
-              :x="item.x + 19"
-              :y="lane.cy + lane.badgeDy"
+              :x="item.x + 10"
+              :y="lane.cy + lane.badgeDir * 10"
               text-anchor="middle"
               dominant-baseline="central"
               font-size="11"
@@ -251,10 +251,10 @@ const lanes = computed(() => {
   )
   const of = (team, kind) => tracks.filter((t) => t.team === team && t.kind === kind)
   return [
-    { key: 'gH', cy: 16, badgeDy: -22, items: of('home', 'goal') },
-    { key: 'sH', cy: 40, badgeDy: -22, items: of('home', 'shots') },
-    { key: 'sA', cy: 216, badgeDy: 22, items: of('away', 'shots') },
-    { key: 'gA', cy: 240, badgeDy: -22, items: of('away', 'goal') },
+    { key: 'gH', cy: 16, badgeDir: -1, items: of('home', 'goal') },
+    { key: 'sH', cy: 40, badgeDir: -1, items: of('home', 'shots') },
+    { key: 'sA', cy: 216, badgeDir: 1, items: of('away', 'shots') },
+    { key: 'gA', cy: 240, badgeDir: 1, items: of('away', 'goal') },
   ]
 })
 const laneItems = computed(() => lanes.value.flatMap((l) => l.items))
