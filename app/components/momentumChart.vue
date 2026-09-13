@@ -144,11 +144,17 @@
       :style="{ left: popLeft, top: popTop, bottom: popBottom }"
     >
       <template v-for="g in activeTrack.groups" :key="g.half + ':' + g.minute">
-        <p v-if="g.goal">{{ g.minute }}' — {{ goalLabel(g.goal) }}</p>
+        <p v-if="g.goal">
+          <span class="font-bold">{{ g.minute }}'</span> Gol - {{ g.goal.team === 'home' ? 'casa' : 'fora' }}
+        </p>
 
-        <p v-for="(s, i) in g.shots" :key="'shot' + i">{{ shotRow(g.minute, s) }}</p>
+        <p v-for="(s, i) in g.shots" :key="'shot' + i">
+          <span class="font-bold">{{ g.minute }}'</span> {{ shotRow(s) }}
+        </p>
 
-        <p v-for="(a, i) in g.alerts" :key="'alert' + i">{{ g.minute }}' — {{ a.label }} (alerta)</p>
+        <p v-for="(a, i) in g.alerts" :key="'alert' + i">
+          <span class="font-bold">{{ g.minute }}'</span> {{ a.label }}
+        </p>
       </template>
     </div>
   </div>
@@ -281,14 +287,9 @@ const popLeft = computed(() => {
 // Faixa de cima: popover abaixo dos marcadores; faixa de baixo: acima.
 const popTop = computed(() => (activeTrack.value && activeTrack.value.team !== 'home' ? 'auto' : '20%'))
 const popBottom = computed(() => (activeTrack.value && activeTrack.value.team !== 'home' ? '18%' : 'auto'))
-function goalLabel(goal) {
-  return goal.team === 'home' ? 'Gol — casa' : 'Gol — fora'
-}
-function shotRow(minute, s) {
-  const team = s.team === 'away' ? 'fora' : 'casa'
-  const label = s.label || `Chance ${s.tier}`
-  const xg = Number.isFinite(Number(s.xg_delta)) ? ` (xG +${Number(s.xg_delta).toFixed(2)})` : ''
-  return `${minute}' — ${s.tier} ${team} — ${label}${xg}`
+function shotRow(s) {
+  const xg = Number.isFinite(Number(s.xg_delta)) ? ` - xG: ${Number(s.xg_delta).toFixed(2)}` : ''
+  return `Chute ${s.tier}${xg}`
 }
 </script>
 
