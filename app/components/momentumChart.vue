@@ -31,7 +31,7 @@
               :y="lane.cy"
               text-anchor="middle"
               dominant-baseline="central"
-              font-size="13"
+              font-size="14"
               font-weight="bold"
               fill="#ffffff"
             >
