@@ -170,7 +170,7 @@
 
 /* NuxtUI Component Theme Overrides */
 .dark {
-  --ui-container: 80rem;
+  --ui-container: 90rem;
   --ui-header-height: 4rem;
   --ui-bg: #09090b;
   --ui-bg-muted: #18181b;
