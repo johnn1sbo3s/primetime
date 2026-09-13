@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { groupIncidents, layoutLane } from '~/utils/scannerIncidents'
+import { groupIncidents, sideOf, stackRows } from '~/utils/scannerIncidents'
 
 describe('groupIncidents', () => {
   it('agrupa chute+gol+alerta do mesmo minuto com prioridade do gol', () => {
@@ -37,85 +37,61 @@ describe('groupIncidents', () => {
   })
 })
 
-describe('layoutLane', () => {
-  it('sem colisão, x = trueX e sem líder', () => {
+describe('sideOf + stackRows', () => {
+  it('gol e chute herdam o lado do time; alerta segue a pressão do minuto', () => {
+    const bars = [
+      { minute: 35, half: 1, home: 0.8, away: 0.1 },
+      { minute: 36, half: 1, home: 0.1, away: 0.7 },
+    ]
     const groups = groupIncidents({
-      shots: [{ minute: 10, team: 'home', tier: 'C2', xg_delta: 0.3 }],
+      shots: [{ minute: 35, team: 'away', tier: 'C2', xg_delta: 0.3 }],
+      goals: [{ minute: 36, team: 'away', player: 'x' }],
+      notifications: [],
+    })
+    expect(sideOf(groups[0], bars)).toBe('away')
+    expect(sideOf(groups[1], bars)).toBe('away')
+    const alertHome = groupIncidents({
+      shots: [],
       goals: [],
-      notifications: [],
-    })
-    const placed = layoutLane(groups, (g) => g.minute * 10)
-    expect(placed[0].x).toBe(100)
-    expect(placed[0].leaderTo).toBeNull()
+      notifications: [{ rule: 'r', label: 'P', minute: 35, at: 't' }],
+    })[0]
+    const alertAway = groupIncidents({
+      shots: [],
+      goals: [],
+      notifications: [{ rule: 'r', label: 'P', minute: 36, at: 't' }],
+    })[0]
+    expect(sideOf(alertHome, bars)).toBe('home')
+    expect(sideOf(alertAway, bars)).toBe('away')
+    expect(sideOf(alertHome, [])).toBe('home')
   })
 
-  it('gol ancora e chute cascateia pra esquerda com líder', () => {
-    const groups = groupIncidents({
-      shots: [{ minute: 42, team: 'home', tier: 'C2', xg_delta: 0.3 }],
-      goals: [{ minute: 43, team: 'home', player: 'x' }],
-      notifications: [],
-    })
-    const placed = layoutLane(groups, (g) => g.minute * 10, 30)
-    const goal = placed.find((p) => p.group.winner === 'goal')
-    const shot = placed.find((p) => p.group.winner === 'shot')
-    expect(goal.x).toBe(430)
-    expect(shot.x).toBe(400)
-    expect(shot.leaderTo).toBe(420)
-  })
-  it('chute à direita do gol é deslocado pra direita com líder', () => {
-    const groups = groupIncidents({
-      shots: [{ minute: 44, team: 'away', tier: 'C1', xg_delta: 0.6 }],
-      goals: [{ minute: 43, team: 'home', player: 'x' }],
-      notifications: [],
-    })
-    const placed = layoutLane(groups, (g) => g.minute * 10, 30)
-    const goal = placed.find((p) => p.group.winner === 'goal')
-    const shot = placed.find((p) => p.group.winner === 'shot')
-    expect(goal.x).toBe(430)
-    expect(shot.x).toBe(460)
-    expect(shot.leaderTo).toBe(440)
+  it('sem colisão, tudo na fileira 0 com x exato', () => {
+    const placed = stackRows([
+      { group: { minute: 10 }, x: 100 },
+      { group: { minute: 20 }, x: 200 },
+    ])
+    expect(placed).toHaveLength(2)
+    expect(placed.every((p) => p.row === 0)).toBe(true)
+    expect(placed.map((p) => p.x).sort((a, b) => a - b)).toEqual([100, 200])
   })
 
-  it('cadeia dos dois lados do gol não cruza líderes', () => {
-    const groups = groupIncidents({
-      shots: [
-        { minute: 42, team: 'home', tier: 'C2', xg_delta: 0.3 },
-        { minute: 44, team: 'away', tier: 'C1', xg_delta: 0.6 },
-      ],
-      goals: [{ minute: 43, team: 'home', player: 'x' }],
-      notifications: [],
-    })
-    const placed = layoutLane(groups, (g) => g.minute * 10, 30)
-    const xs = placed.map((p) => p.x).sort((a, b) => a - b)
-    expect(xs[1] - xs[0]).toBeGreaterThanOrEqual(30)
-    expect(xs[2] - xs[1]).toBeGreaterThanOrEqual(30)
-    expect(placed.find((p) => p.group.winner === 'goal').x).toBe(430)
+  it('vizinhos colidem: segunda fileira, x intacto', () => {
+    const placed = stackRows([
+      { group: { minute: 42 }, x: 280 },
+      { group: { minute: 43 }, x: 287 },
+    ])
+    expect(placed.map((p) => p.row).sort()).toEqual([0, 1])
+    expect(placed.map((p) => p.x).sort((a, b) => a - b)).toEqual([280, 287])
   })
 
-  it('cluster real (Lecce): nenhum par divide o x com pitch 46', () => {
-    const STEP = 632 / 90
-    const groups = groupIncidents({
-      shots: [
-        { minute: 3, team: 'home', tier: 'C3', xg_delta: 0.1 },
-        { minute: 13, team: 'home', tier: 'C2', xg_delta: 0.3 },
-        { minute: 13, team: 'away', tier: 'C2', xg_delta: 0.25 },
-        { minute: 22, team: 'home', tier: 'C3', xg_delta: 0.1 },
-        { minute: 22, team: 'away', tier: 'C1', xg_delta: 0.6 },
-        { minute: 23, team: 'home', tier: 'C1', xg_delta: 0.55 },
-        { minute: 25, team: 'away', tier: 'C2', xg_delta: 0.3 },
-      ],
-      goals: [
-        { minute: 3, team: 'home', player: 'a' },
-        { minute: 10, team: 'home', player: 'b' },
-        { minute: 20, team: 'away', player: 'c' },
-        { minute: 21, team: 'home', player: 'd' },
-      ],
-      notifications: [],
-    })
-    const placed = layoutLane(groups, (g) => (g.minute - 1) * STEP, 46)
-    const xs = placed.map((p) => p.x).sort((a, b) => a - b)
-    for (let i = 1; i < xs.length; i++) {
-      expect(xs[i] - xs[i - 1]).toBeGreaterThanOrEqual(46 - 1e-6)
-    }
+  it('terceiro no mesmo ponto funde o extra no vizinho', () => {
+    const placed = stackRows([
+      { group: { minute: 42, extra: 0 }, x: 280 },
+      { group: { minute: 43, extra: 0 }, x: 287 },
+      { group: { minute: 44, extra: 2 }, x: 290 },
+    ])
+    expect(placed).toHaveLength(2)
+    const keeper = placed.find((p) => p.group.minute === 43)
+    expect(keeper.group.extra).toBe(3)
   })
 })

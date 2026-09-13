@@ -43,7 +43,7 @@ describe('MomentumChart', () => {
     expect(wrapper.find('.lane-goal path').exists()).toBe(true)
   })
 
-  it('colisão: +N e linha-guia', async () => {
+  it('colisão no mesmo minuto: +N', async () => {
     const wrapper = await mountSuspended(MomentumChart, {
       props: {
         bars: [{ minute: 43, home: 0.5, away: 0 }],
@@ -55,6 +55,47 @@ describe('MomentumChart', () => {
     })
     expect(wrapper.find('.lane-more').exists()).toBe(true)
     expect(wrapper.find('.lane-more text').text()).toBe('+1')
+  })
+
+  it('casa em cima, fora embaixo', async () => {
+    const wrapper = await mountSuspended(MomentumChart, {
+      props: {
+        bars: [{ minute: 10, home: 0.5, away: 0.2 }],
+        goals: [],
+        shots: [
+          { minute: 10, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' },
+          { minute: 30, team: 'away', tier: 'C1', xg_delta: 0.6, label: 'Grande chance' },
+        ],
+        notifications: [],
+        minute: 40,
+      },
+    })
+    const homeCy = Number(wrapper.find('.lane-shot circle[r="10"]').attributes('cy'))
+    const awayCy = Number(wrapper.findAll('.lane-shot circle[r="10"]')[1].attributes('cy'))
+    expect(homeCy).toBeLessThan(100)
+    expect(awayCy).toBeGreaterThan(150)
+  })
+
+  it('vizinhos do mesmo lado empilham sem sair do minuto', async () => {
+    const wrapper = await mountSuspended(MomentumChart, {
+      props: {
+        bars: [
+          { minute: 42, home: 0.5, away: 0 },
+          { minute: 43, home: 0.6, away: 0 },
+        ],
+        goals: [],
+        shots: [
+          { minute: 42, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' },
+          { minute: 43, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' },
+        ],
+        notifications: [],
+        minute: 45,
+      },
+    })
+    const cys = wrapper.findAll('.lane-shot circle[r="10"]').map((c) => c.attributes('cy'))
+    expect(cys).toHaveLength(2)
+    expect(cys[0]).not.toBe(cys[1])
+    expect(wrapper.find('line[stroke="#a1a1aa"]').exists()).toBe(false)
   })
 
   it('linha ao vivo no minuto atual', async () => {

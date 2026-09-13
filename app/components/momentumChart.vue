@@ -2,7 +2,7 @@
   <div class="relative">
     <svg
       v-if="bars.length"
-      viewBox="0 0 640 214"
+      viewBox="0 0 640 252"
       preserveAspectRatio="none"
       role="img"
       aria-label="Gráfico de momentum"
@@ -10,95 +10,97 @@
     >
       <line x1="0" y1="56" x2="640" y2="56" stroke="#3f3f46" stroke-width="1" />
 
-      <template v-for="item in laneItems" :key="item.group.half + ':' + item.group.minute">
-        <rect :x="item.x - 13" y="11" width="26" height="30" rx="8" fill="#27272a" />
-
-        <line
-          v-if="item.leaderTo != null"
-          :x1="item.x"
-          y1="40"
-          :x2="item.leaderTo"
-          y2="57"
-          stroke="#a1a1aa"
-          stroke-width="1.2"
-        />
-
-        <g
-          v-if="item.group.winner === 'shot'"
-          class="lane-shot"
-          tabindex="0"
-          @mouseenter="activeKey = minKey(item.group)"
-          @mouseleave="activeKey = null"
-          @focus="activeKey = minKey(item.group)"
-          @blur="activeKey = null"
-          @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
-        >
-          <circle
-            :cx="item.x"
-            cy="26"
-            r="10"
-            fill="#27272a"
-            :stroke="teamColor(item.group.shots[0].team)"
-            stroke-width="2.5"
-          />
-
-          <text
-            :x="item.x"
-            y="26"
-            text-anchor="middle"
-            dominant-baseline="central"
-            font-size="14"
-            font-weight="bold"
-            fill="#ffffff"
+      <template v-for="lane in lanes" :key="lane.key">
+        <template v-for="item in lane.items" :key="item.group.half + ':' + item.group.minute">
+          <g
+            v-if="item.group.winner === 'shot'"
+            class="lane-shot"
+            tabindex="0"
+            @mouseenter="activeKey = minKey(item.group)"
+            @mouseleave="activeKey = null"
+            @focus="activeKey = minKey(item.group)"
+            @blur="activeKey = null"
+            @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
           >
-            {{ item.group.shots[0].tier.slice(1) }}
-          </text>
-        </g>
+            <circle :cx="item.x" :cy="lane.rows[item.row]" r="14" fill="transparent" />
 
-        <g
-          v-else-if="item.group.winner === 'goal'"
-          class="lane-goal"
-          tabindex="0"
-          @mouseenter="activeKey = minKey(item.group)"
-          @mouseleave="activeKey = null"
-          @focus="activeKey = minKey(item.group)"
-          @blur="activeKey = null"
-          @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
-        >
-          <circle :cx="item.x" cy="26" r="10" fill="#f4f4f5" />
+            <circle
+              :cx="item.x"
+              :cy="lane.rows[item.row]"
+              r="10"
+              fill="#27272a"
+              :stroke="teamColor(item.group.shots[0].team)"
+              stroke-width="2.5"
+            />
 
-          <path :d="BALL_PATH" :fill="teamColor(item.group.goal.team)" :transform="ballTransform(item.x)" />
-        </g>
+            <text
+              :x="item.x"
+              :y="lane.rows[item.row]"
+              text-anchor="middle"
+              dominant-baseline="central"
+              font-size="14"
+              font-weight="bold"
+              fill="#ffffff"
+            >
+              {{ item.group.shots[0].tier.slice(1) }}
+            </text>
+          </g>
 
-        <g
-          v-else
-          class="lane-alert"
-          tabindex="0"
-          @mouseenter="activeKey = minKey(item.group)"
-          @mouseleave="activeKey = null"
-          @focus="activeKey = minKey(item.group)"
-          @blur="activeKey = null"
-          @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
-        >
-          <path :d="diamondD(item.x)" fill="none" stroke="#fbbf24" stroke-width="2" />
-        </g>
-
-        <g v-if="item.group.extra > 0" class="lane-more">
-          <circle :cx="item.x + 19" cy="14" r="9" fill="#52525b" />
-
-          <text
-            :x="item.x + 19"
-            y="14"
-            text-anchor="middle"
-            dominant-baseline="central"
-            font-size="11"
-            font-weight="bold"
-            fill="#ffffff"
+          <g
+            v-else-if="item.group.winner === 'goal'"
+            class="lane-goal"
+            tabindex="0"
+            @mouseenter="activeKey = minKey(item.group)"
+            @mouseleave="activeKey = null"
+            @focus="activeKey = minKey(item.group)"
+            @blur="activeKey = null"
+            @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
           >
-            +{{ item.group.extra }}
-          </text>
-        </g>
+            <circle :cx="item.x" :cy="lane.rows[item.row]" r="14" fill="transparent" />
+
+            <circle :cx="item.x" :cy="lane.rows[item.row]" r="10" fill="#f4f4f5" />
+
+            <path
+              :d="BALL_PATH"
+              :fill="teamColor(item.group.goal.team)"
+              :transform="ballTransform(item.x, lane.rows[item.row])"
+            />
+          </g>
+
+          <g
+            v-else
+            class="lane-alert"
+            tabindex="0"
+            @mouseenter="activeKey = minKey(item.group)"
+            @mouseleave="activeKey = null"
+            @focus="activeKey = minKey(item.group)"
+            @blur="activeKey = null"
+            @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
+          >
+            <circle :cx="item.x" :cy="lane.rows[item.row]" r="14" fill="transparent" />
+
+            <path :d="diamondD(item.x, lane.rows[item.row])" fill="none" stroke="#fbbf24" stroke-width="2" />
+          </g>
+
+          <g v-if="item.group.extra > 0" class="lane-more">
+            <circle :cx="item.x + 19" :cy="lane.rows[item.row] - 12" r="9" fill="#52525b" />
+
+            <text
+              :x="item.x + 19"
+              :y="lane.rows[item.row] - 12"
+              text-anchor="middle"
+              dominant-baseline="central"
+              font-size="11"
+              font-weight="bold"
+              fill="#ffffff"
+            >
+              +{{ item.group.extra }}
+            </text>
+          </g>
+        </template>
       </template>
+
+      <line x1="0" y1="196" x2="640" y2="196" stroke="#3f3f46" stroke-width="1" />
 
       <line
         v-if="minute != null"
@@ -106,7 +108,7 @@
         :x1="liveX"
         y1="0"
         :x2="liveX"
-        y2="166"
+        y2="196"
         stroke="#ef4444"
         stroke-width="2"
       />
@@ -169,7 +171,7 @@
 </template>
 
 <script setup>
-import { BALL_PATH, groupIncidents, layoutLane } from '~/utils/scannerIncidents'
+import { BALL_PATH, groupIncidents, sideOf, stackRows } from '~/utils/scannerIncidents'
 
 const props = defineProps({
   bars: { type: Array, default: () => [] },
@@ -249,17 +251,24 @@ function barY(b) {
   return Number(b.home) > 0 ? CENTER - barHeight(b) : CENTER
 }
 
-// Faixa de incidentes (y 0..56): grupos por minuto via util da Task 1,
-// x verdadeiro pelo barX do grupo. Nome consumido pela Task 3 (popover).
-const laneItems = computed(() =>
-  // pitch 46 = balão 26 + badge (x+19 r9 → até x+28) + respiro: o badge
-  // estourava 11px pra dentro do vizinho e empilhava o cluster.
-  layoutLane(
-    groupIncidents({ shots: props.shots, goals: props.goals, notifications: props.notifications }),
-    (g) => barX({ minute: g.minute, half: g.half }),
-    46,
-  ),
-)
+// Faixas por lado (casa em cima, fora embaixo): grupos via util, x exato pelo
+// barX, empilhamento vertical quando colidem. Nome laneItems consumido pelo
+// popover.
+const lanes = computed(() => {
+  const groups = groupIncidents({ shots: props.shots, goals: props.goals, notifications: props.notifications })
+  const top = []
+  const bot = []
+  for (const g of groups) {
+    const entry = { group: g, x: barX({ minute: g.minute, half: g.half }) }
+    if (sideOf(g, props.bars) === 'home') top.push(entry)
+    else bot.push(entry)
+  }
+  return [
+    { key: 'top', rows: [23, 43], items: stackRows(top) },
+    { key: 'bot', rows: [212, 234], items: stackRows(bot) },
+  ]
+})
+const laneItems = computed(() => lanes.value.flatMap((l) => l.items))
 
 const liveX = computed(() => {
   if (props.minute == null) return null
@@ -272,13 +281,12 @@ function teamColor(team) {
 
 // Bola Packball (viewBox 512) centrada em (x, 26) com ~21px de diâmetro.
 const BALL_S = 17 / 416
-function ballTransform(x) {
-  const offset = 26 - 256 * BALL_S
-  return `translate(${x - 256 * BALL_S} ${offset}) scale(${BALL_S})`
+function ballTransform(x, cy) {
+  return `translate(${x - 256 * BALL_S} ${cy - 256 * BALL_S}) scale(${BALL_S})`
 }
 
-function diamondD(x) {
-  return `M ${x} 16 L ${x + 10} 26 L ${x} 36 L ${x - 10} 26 Z`
+function diamondD(x, cy) {
+  return `M ${x} ${cy - 10} L ${x + 10} ${cy} L ${x} ${cy + 10} L ${x - 10} ${cy} Z`
 }
 
 // Popover do minuto: chave half:minuto do grupo ativo.

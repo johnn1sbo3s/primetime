@@ -53,68 +53,38 @@ export function groupIncidents({ shots = [], goals = [], notifications = [] } = 
   return groups
 }
 
-export function layoutLane(groups, xOf, gap = 30) {
-  const items = groups.map((g) => ({ group: g, trueX: xOf(g), x: xOf(g), leaderTo: null }))
-  // Gols ancoram no x exato, com respiro entre si (raro: gols em minutos
-  // vizinhos — o deslocado ganha líder como os demais).
-  const goals = items.filter((i) => i.group.winner === 'goal').sort((a, b) => a.trueX - b.trueX)
-  let prev = -Infinity
-  for (const g of goals) {
-    g.x = Math.max(g.trueX, prev + gap)
-    prev = g.x
-  }
-  // Não-gols: cada um entra na cadeia do gol mais próximo (empate → esquerda).
-  // Cadeia esquerda cascateia pra esquerda do gol, direita pra direita:
-  // ordem preservada, líderes nunca cruzam.
-  const chains = new Map()
-  for (const it of items) {
-    if (it.group.winner === 'goal') continue
-    let anchor = null
-    let best = Infinity
-    for (const g of goals) {
-      const d = Math.abs(it.trueX - g.x)
-      if (d < best) {
-        best = d
-        anchor = g
+// Lado da faixa: gol e chute herdam o time; alerta (sem time) vai pro lado
+// que pressionava no minuto (barra com maior valor; empate ou sem barra = casa).
+export function sideOf(group, bars) {
+  if (group?.goal) return group.goal.team === 'away' ? 'away' : 'home'
+  if (group?.shots?.length > 0) return group.shots[0].team === 'away' ? 'away' : 'home'
+  const list = Array.isArray(bars) ? bars : []
+  const bar = list.find((b) => Number(b?.minute) === Number(group?.minute) && halfOf(b) === halfOf(group))
+  const home = Number(bar?.home) || 0
+  const away = Number(bar?.away) || 0
+  return away > home ? 'away' : 'home'
+}
+
+// Empilhamento vertical: x nunca muda (minuto sempre legível, sem linhas).
+// Fileira 0 por padrão; vizinho a menos de pitch sobe pra fileira 1;
+// terceiro no mesmo ponto funde os incidentes no vizinho (+N do keeper soma
+// os escondidos do fundido + 1). O minuto fundido perde o popover próprio.
+export function stackRows(entries, pitch = 26) {
+  const sorted = [...entries].sort((a, b) => a.x - b.x)
+  const placed = []
+  const rows = [[], []]
+  for (const it of sorted) {
+    const free = rows.findIndex((xs) => xs.every((v) => Math.abs(it.x - v) >= pitch))
+    if (free === -1) {
+      let keeper = placed[0]
+      for (const p of placed) {
+        if (Math.abs(it.x - p.x) < Math.abs(it.x - keeper.x)) keeper = p
       }
+      keeper.group.extra = (keeper.group.extra || 0) + (it.group.extra || 0) + 1
+      continue
     }
-    const side = anchor && it.trueX > anchor.x ? 'R' : 'L'
-    const key = side + (anchor ? anchor.x : 'free')
-    if (!chains.has(key)) chains.set(key, { anchor, side, list: [] })
-    chains.get(key).list.push(it)
+    rows[free].push(it.x)
+    placed.push({ group: it.group, x: it.x, row: free })
   }
-  for (const { anchor, side, list } of chains.values()) {
-    if (side === 'L') {
-      list.sort((a, b) => b.trueX - a.trueX)
-      let cursor = anchor ? anchor.x - gap : 640
-      for (const it of list) {
-        it.x = Math.min(it.trueX, cursor)
-        cursor = it.x - gap
-      }
-    } else {
-      list.sort((a, b) => a.trueX - b.trueX)
-      let cursor = anchor ? anchor.x + gap : 0
-      for (const it of list) {
-        it.x = Math.max(it.trueX, cursor)
-        cursor = it.x + gap
-      }
-    }
-  }
-  // Rede de segurança: varredura final — nenhum par divide o mesmo x.
-  const asc = [...items].sort((a, b) => a.x - b.x)
-  let q = -Infinity
-  for (const it of asc) {
-    if (it.x < q + gap) it.x = q + gap
-    q = it.x
-  }
-  // Guarda de borda: faixa é 0..640.
-  if (items.length > 0) {
-    const xs = items.map((i) => i.x)
-    const lo = Math.min(...xs)
-    const hi = Math.max(...xs)
-    const shift = lo < 0 ? -lo : hi > 640 ? 640 - hi : 0
-    if (shift !== 0) for (const it of items) it.x += shift
-  }
-  for (const it of items) it.leaderTo = it.x === it.trueX ? null : it.trueX
-  return items
+  return placed
 }
