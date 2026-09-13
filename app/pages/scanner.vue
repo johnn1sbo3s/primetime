@@ -1,187 +1,176 @@
 <template>
-  <ResizableContainer storage-key="dataplaybets:scanner-width">
-    <div class="flex flex-col gap-5">
-      <PageHeader title="Scanner ao vivo">
-        <template #title>
-          Scanner ao vivo
-          <span
-            class="ml-2 inline-block rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-0.5 align-middle text-xs font-semibold whitespace-nowrap text-zinc-400"
+  <div class="flex flex-col gap-5">
+    <PageHeader title="Scanner ao vivo">
+      <template #title>
+        Scanner ao vivo
+        <span
+          class="ml-2 inline-block rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-0.5 align-middle text-xs font-semibold whitespace-nowrap text-zinc-400"
+        >
+          {{ games.length }} {{ games.length === 1 ? 'jogo' : 'jogos' }}
+        </span>
+      </template>
+
+      <template #right>
+        <div
+          class="flex w-full items-center justify-between gap-3 text-xs text-zinc-400 sm:ml-auto sm:w-auto sm:justify-end"
+        >
+          <UButton to="/daily-report" target="_blank" color="primary" variant="soft" size="xs">
+            Relatório do dia
+          </UButton>
+
+          <UButton
+            v-if="hasTomorrowReport"
+            :to="`/daily-report?date=${tomorrowIso}`"
+            target="_blank"
+            color="primary"
+            variant="outline"
+            size="xs"
           >
-            {{ games.length }} {{ games.length === 1 ? 'jogo' : 'jogos' }}
+            Relatório de amanhã
+          </UButton>
+
+          <span class="flex items-center gap-2">
+            <span class="relative flex h-2 w-2">
+              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75"></span>
+
+              <span class="relative inline-flex h-2 w-2 rounded-full bg-teal-400"></span>
+            </span>
+
+            <USkeleton v-if="loading && !snapshot" class="h-3 w-28" />
+
+            <span v-else-if="updatedAgo">Atualizado {{ updatedAgo }}</span>
+
+            <span v-if="offline" class="text-zinc-600">· sem conexão</span>
           </span>
-        </template>
+        </div>
+      </template>
+    </PageHeader>
 
-        <template #right>
-          <div
-            class="flex w-full items-center justify-between gap-3 text-xs text-zinc-400 sm:ml-auto sm:w-auto sm:justify-end"
+    <ScannerSkeleton v-if="loading && !snapshot" />
+
+    <div
+      v-else-if="fetchError && !snapshot"
+      class="rounded-2xl border border-zinc-800 bg-zinc-900 py-16 text-center text-sm text-zinc-500"
+    >
+      Não foi possível carregar os jogos ao vivo. Tente novamente em instantes.
+    </div>
+
+    <div v-else-if="games.length === 0" class="py-16 text-center text-sm text-zinc-500">Nenhum jogo ao vivo agora</div>
+
+    <div v-else class="flex flex-col gap-4">
+      <template v-if="favoriteGames.length">
+        <section class="rounded-2xl bg-amber-400/10 p-4">
+          <header
+            role="button"
+            tabindex="0"
+            class="flex cursor-pointer flex-wrap items-center justify-between gap-2 select-none"
+            :aria-expanded="!favoritesCollapsed"
+            aria-controls="favorites-collapse"
+            @click="toggleFavoritesCollapsed"
+            @keydown.enter.prevent="toggleFavoritesCollapsed"
+            @keydown.space.prevent="toggleFavoritesCollapsed"
           >
-            <UButton to="/daily-report" target="_blank" color="primary" variant="soft" size="xs">
-              Relatório do dia
-            </UButton>
+            <h2 class="flex items-center gap-1.5 text-sm font-bold text-zinc-100">
+              <UIcon name="i-lucide-star" mode="svg" class="star-fill size-4 text-amber-400" />
 
-            <UButton
-              v-if="hasTomorrowReport"
-              :to="`/daily-report?date=${tomorrowIso}`"
-              target="_blank"
-              color="primary"
-              variant="outline"
-              size="xs"
-            >
-              Relatório de amanhã
-            </UButton>
+              Jogos favoritos
+              <span
+                class="text-2xs rounded-full border border-teal-500/30 bg-zinc-950 px-2.5 py-0.5 font-semibold whitespace-nowrap text-zinc-400"
+              >
+                {{ favoriteGames.length }} {{ favoriteGames.length === 1 ? 'jogo' : 'jogos' }}
+              </span>
+            </h2>
 
             <span class="flex items-center gap-2">
-              <span class="relative flex h-2 w-2">
-                <span
-                  class="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75"
-                ></span>
-
-                <span class="relative inline-flex h-2 w-2 rounded-full bg-teal-400"></span>
-              </span>
-
-              <USkeleton v-if="loading && !snapshot" class="h-3 w-28" />
-
-              <span v-else-if="updatedAgo">Atualizado {{ updatedAgo }}</span>
-
-              <span v-if="offline" class="text-zinc-600">· sem conexão</span>
+              <UIcon
+                name="i-lucide-chevron-down"
+                mode="svg"
+                class="size-4 text-zinc-500 transition-transform duration-250 ease-in-out"
+                :class="{ 'rotate-180': favoritesCollapsed }"
+              />
             </span>
-          </div>
-        </template>
-      </PageHeader>
+          </header>
 
-      <ScannerSkeleton v-if="loading && !snapshot" />
-
-      <div
-        v-else-if="fetchError && !snapshot"
-        class="rounded-2xl border border-zinc-800 bg-zinc-900 py-16 text-center text-sm text-zinc-500"
-      >
-        Não foi possível carregar os jogos ao vivo. Tente novamente em instantes.
-      </div>
-
-      <div v-else-if="games.length === 0" class="py-16 text-center text-sm text-zinc-500">
-        Nenhum jogo ao vivo agora
-      </div>
-
-      <div v-else class="flex flex-col gap-4">
-        <template v-if="favoriteGames.length">
-          <section class="rounded-2xl bg-amber-400/10 p-4">
-            <header
-              role="button"
-              tabindex="0"
-              class="flex cursor-pointer flex-wrap items-center justify-between gap-2 select-none"
-              :aria-expanded="!favoritesCollapsed"
-              aria-controls="favorites-collapse"
-              @click="toggleFavoritesCollapsed"
-              @keydown.enter.prevent="toggleFavoritesCollapsed"
-              @keydown.space.prevent="toggleFavoritesCollapsed"
-            >
-              <h2 class="flex items-center gap-1.5 text-sm font-bold text-zinc-100">
-                <UIcon name="i-lucide-star" mode="svg" class="star-fill size-4 text-amber-400" />
-
-                Jogos favoritos
-                <span
-                  class="text-2xs rounded-full border border-teal-500/30 bg-zinc-950 px-2.5 py-0.5 font-semibold whitespace-nowrap text-zinc-400"
-                >
-                  {{ favoriteGames.length }} {{ favoriteGames.length === 1 ? 'jogo' : 'jogos' }}
-                </span>
-              </h2>
-
-              <span class="flex items-center gap-2">
-                <UIcon
-                  name="i-lucide-chevron-down"
-                  mode="svg"
-                  class="size-4 text-zinc-500 transition-transform duration-250 ease-in-out"
-                  :class="{ 'rotate-180': favoritesCollapsed }"
+          <Transition :duration="250" @enter="onCollapseEnter" @leave="onCollapseLeave">
+            <div v-show="!favoritesCollapsed" id="favorites-collapse" class="mt-3">
+              <TransitionGroup tag="div" name="fav" appear class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <ScannerCard
+                  v-for="game in favoriteGames"
+                  :id="`game-${game.id}`"
+                  :key="game.id"
+                  :game="game"
+                  :highlighted="game.id === activeHighlight"
+                  :pre-live-bets="preLiveBetsByGame[game.id] || []"
                 />
-              </span>
-            </header>
+              </TransitionGroup>
+            </div>
+          </Transition>
+        </section>
 
-            <Transition :duration="250" @enter="onCollapseEnter" @leave="onCollapseLeave">
-              <div v-show="!favoritesCollapsed" id="favorites-collapse" class="mt-3">
-                <TransitionGroup
-                  tag="div"
-                  name="fav"
-                  appear
-                  class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
-                >
-                  <ScannerCard
-                    v-for="game in favoriteGames"
-                    :id="`game-${game.id}`"
-                    :key="game.id"
-                    :game="game"
-                    :highlighted="game.id === activeHighlight"
-                    :pre-live-bets="preLiveBetsByGame[game.id] || []"
-                  />
-                </TransitionGroup>
-              </div>
-            </Transition>
-          </section>
+        <USeparator />
+      </template>
 
-          <USeparator />
-        </template>
+      <div class="flex flex-col gap-1.5">
+        <span class="text-2xs font-semibold tracking-wide text-zinc-500 uppercase">Filtros</span>
 
-        <div class="flex flex-col gap-1.5">
-          <span class="text-2xs font-semibold tracking-wide text-zinc-500 uppercase">Filtros</span>
+        <div class="flex w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
+          <UInput v-model="query" icon="i-lucide-search" placeholder="Buscar time ou liga…" class="w-full md:w-72" />
 
-          <div class="flex w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
-            <UInput v-model="query" icon="i-lucide-search" placeholder="Buscar time ou liga…" class="w-full md:w-72" />
+          <SegmentedControl v-model="oddsPreset" :options="oddsPresetOptions" full-width />
 
-            <SegmentedControl v-model="oddsPreset" :options="oddsPresetOptions" full-width />
+          <div class="flex flex-wrap items-center justify-end gap-4 md:ml-auto">
+            <div class="flex items-center gap-2">
+              <USwitch
+                v-model="onlyNotified"
+                size="md"
+                checked-icon="i-lucide-check"
+                unchecked-icon="i-lucide-x"
+                aria-labelledby="only-notified-label"
+                title="jogos que já tiveram algum alerta"
+              />
 
-            <div class="flex flex-wrap items-center justify-end gap-4 md:ml-auto">
-              <div class="flex items-center gap-2">
-                <USwitch
-                  v-model="onlyNotified"
-                  size="md"
-                  checked-icon="i-lucide-check"
-                  unchecked-icon="i-lucide-x"
-                  aria-labelledby="only-notified-label"
-                  title="jogos que já tiveram algum alerta"
-                />
+              <span id="only-notified-label" class="text-xs font-medium whitespace-nowrap text-zinc-400"
+                >Só notificados</span
+              >
+            </div>
 
-                <span id="only-notified-label" class="text-xs font-medium whitespace-nowrap text-zinc-400"
-                  >Só notificados</span
-                >
-              </div>
+            <div class="flex items-center gap-2">
+              <USwitch
+                v-model="onlyPreLive"
+                size="md"
+                checked-icon="i-lucide-check"
+                unchecked-icon="i-lucide-x"
+                aria-labelledby="only-pre-live-label"
+                title="jogos com aposta de modelo pré-live"
+              />
 
-              <div class="flex items-center gap-2">
-                <USwitch
-                  v-model="onlyPreLive"
-                  size="md"
-                  checked-icon="i-lucide-check"
-                  unchecked-icon="i-lucide-x"
-                  aria-labelledby="only-pre-live-label"
-                  title="jogos com aposta de modelo pré-live"
-                />
-
-                <span id="only-pre-live-label" class="text-xs font-medium whitespace-nowrap text-zinc-400"
-                  >Só com pré-live</span
-                >
-              </div>
+              <span id="only-pre-live-label" class="text-xs font-medium whitespace-nowrap text-zinc-400"
+                >Só com pré-live</span
+              >
             </div>
           </div>
         </div>
+      </div>
 
-        <div v-if="otherGames.length" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <ScannerCard
-            v-for="game in otherGames"
-            :id="`game-${game.id}`"
-            :key="game.id"
-            :game="game"
-            :highlighted="game.id === activeHighlight"
-            :pre-live-bets="preLiveBetsByGame[game.id] || []"
-          />
-        </div>
+      <div v-if="otherGames.length" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <ScannerCard
+          v-for="game in otherGames"
+          :id="`game-${game.id}`"
+          :key="game.id"
+          :game="game"
+          :highlighted="game.id === activeHighlight"
+          :pre-live-bets="preLiveBetsByGame[game.id] || []"
+        />
+      </div>
 
-        <div
-          v-else-if="filtersActive"
-          class="rounded-2xl border border-zinc-800 bg-zinc-900 py-14 text-center text-sm text-zinc-500"
-        >
-          Nenhum jogo corresponde ao filtro.
-        </div>
+      <div
+        v-else-if="filtersActive"
+        class="rounded-2xl border border-zinc-800 bg-zinc-900 py-14 text-center text-sm text-zinc-500"
+      >
+        Nenhum jogo corresponde ao filtro.
       </div>
     </div>
-  </ResizableContainer>
+  </div>
 </template>
 
 <script setup>
