@@ -118,9 +118,9 @@
 
         <rect :x="P2" y="0" :width="W2" height="110" fill="#27272a" />
 
-        <rect x="0" y="33" width="640" height="22" fill="#fafafa" opacity="0.05" />
+        <rect x="0" y="0" width="640" height="33" fill="#fafafa" opacity="0.05" />
 
-        <rect x="0" y="55" width="640" height="22" fill="#fafafa" opacity="0.05" />
+        <rect x="0" y="77" width="640" height="33" fill="#fafafa" opacity="0.05" />
 
         <line class="lane-threshold" x1="0" y1="33" x2="640" y2="33" stroke="#52525b" stroke-width="1" />
 
@@ -252,8 +252,12 @@ function barY(b) {
 // Faixa de incidentes (y 0..56): grupos por minuto via util da Task 1,
 // x verdadeiro pelo barX do grupo. Nome consumido pela Task 3 (popover).
 const laneItems = computed(() =>
-  layoutLane(groupIncidents({ shots: props.shots, goals: props.goals, notifications: props.notifications }), (g) =>
-    barX({ minute: g.minute, half: g.half }),
+  // pitch 46 = balão 26 + badge (x+19 r9 → até x+28) + respiro: o badge
+  // estourava 11px pra dentro do vizinho e empilhava o cluster.
+  layoutLane(
+    groupIncidents({ shots: props.shots, goals: props.goals, notifications: props.notifications }),
+    (g) => barX({ minute: g.minute, half: g.half }),
+    46,
   ),
 )
 

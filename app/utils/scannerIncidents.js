@@ -54,31 +54,44 @@ export function groupIncidents({ shots = [], goals = [], notifications = [] } = 
 }
 
 export function layoutLane(groups, xOf, gap = 30) {
-  const items = groups.map((g) => ({ group: g, trueX: xOf(g), x: 0, leaderTo: null }))
-  const ordered = [...items].sort((a, b) => b.trueX - a.trueX)
-  let cursor = 640
-  for (const it of ordered) {
-    if (it.group.winner === 'goal') {
-      it.x = it.trueX
-      cursor = Math.min(cursor, it.trueX - gap)
-    } else {
-      it.x = Math.min(it.trueX, cursor)
-      cursor = it.x - gap
-    }
+  const items = groups.map((g) => ({ group: g, trueX: xOf(g), x: xOf(g), leaderTo: null }))
+  // Gols ancoram no x exato, com respiro entre si (raro: gols em minutos
+  // vizinhos — o deslocado ganha líder como os demais).
+  const goals = items.filter((i) => i.group.winner === 'goal').sort((a, b) => a.trueX - b.trueX)
+  let prev = -Infinity
+  for (const g of goals) {
+    g.x = Math.max(g.trueX, prev + gap)
+    prev = g.x
   }
-  if (items.length > 0 && Math.min(...items.map((i) => i.x)) < 0) {
-    const goal = items.find((i) => i.group.winner === 'goal')
-    if (goal) {
-      const rest = items.filter((i) => i !== goal).sort((a, b) => a.trueX - b.trueX)
-      let cx = goal.x + gap
-      for (const it of rest) {
-        it.x = Math.max(it.trueX, cx)
-        cx = it.x + gap
-      }
-    } else {
-      const min = Math.min(...items.map((i) => i.x))
-      for (const it of items) it.x -= min
+  // Resto: relaxamento em 2 passadas, gols fixos. Esquerda→direita empurra
+  // pra direita, direita→esquerda puxa pra esquerda; ordem preservada, então
+  // líderes nunca cruzam. Sobra só em aperto patológico (3+ itens em <2*gap
+  // com gol fixo no meio) — aí o líder mostra o minuto verdadeiro.
+  const asc = [...items].sort((a, b) => a.x - b.x || (a.group.winner === 'goal' ? -1 : 1))
+  let p = -Infinity
+  for (const it of asc) {
+    if (it.group.winner === 'goal') {
+      p = it.x
+      continue
     }
+    if (it.x < p + gap) it.x = p + gap
+    p = it.x
+  }
+  const desc = [...items].sort((a, b) => b.x - a.x || (a.group.winner === 'goal' ? 1 : -1))
+  p = Infinity
+  for (const it of desc) {
+    if (it.group.winner === 'goal') {
+      p = it.x
+      continue
+    }
+    if (it.x > p - gap) it.x = p - gap
+    p = it.x
+  }
+  // Guarda de borda: faixa é 0..640.
+  if (items.length > 0) {
+    const xs = items.map((i) => i.x)
+    const shift = Math.min(...xs) < 0 ? -Math.min(...xs) : Math.max(...xs) > 640 ? 640 - Math.max(...xs) : 0
+    if (shift !== 0) for (const it of items) it.x += shift
   }
   for (const it of items) it.leaderTo = it.x === it.trueX ? null : it.trueX
   return items

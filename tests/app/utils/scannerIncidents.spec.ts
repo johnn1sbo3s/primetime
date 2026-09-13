@@ -62,4 +62,33 @@ describe('layoutLane', () => {
     expect(shot.x).toBe(400)
     expect(shot.leaderTo).toBe(420)
   })
+  it('chute à direita do gol é deslocado pra direita com líder', () => {
+    const groups = groupIncidents({
+      shots: [{ minute: 44, team: 'away', tier: 'C1', xg_delta: 0.6 }],
+      goals: [{ minute: 43, team: 'home', player: 'x' }],
+      notifications: [],
+    })
+    const placed = layoutLane(groups, (g) => g.minute * 10, 30)
+    const goal = placed.find((p) => p.group.winner === 'goal')
+    const shot = placed.find((p) => p.group.winner === 'shot')
+    expect(goal.x).toBe(430)
+    expect(shot.x).toBe(460)
+    expect(shot.leaderTo).toBe(440)
+  })
+
+  it('cadeia dos dois lados do gol não cruza líderes', () => {
+    const groups = groupIncidents({
+      shots: [
+        { minute: 42, team: 'home', tier: 'C2', xg_delta: 0.3 },
+        { minute: 44, team: 'away', tier: 'C1', xg_delta: 0.6 },
+      ],
+      goals: [{ minute: 43, team: 'home', player: 'x' }],
+      notifications: [],
+    })
+    const placed = layoutLane(groups, (g) => g.minute * 10, 30)
+    const xs = placed.map((p) => p.x).sort((a, b) => a - b)
+    expect(xs[1] - xs[0]).toBeGreaterThanOrEqual(30)
+    expect(xs[2] - xs[1]).toBeGreaterThanOrEqual(30)
+    expect(placed.find((p) => p.group.winner === 'goal').x).toBe(430)
+  })
 })
