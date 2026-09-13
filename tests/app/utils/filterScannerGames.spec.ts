@@ -123,20 +123,16 @@ describe('filterScannerGames — preset de odds', () => {
     { id: 'o4', home: 'Ponte Preta', away: 'Guarani', league: 'Série B', notifications: [], odds: {} },
   ]
 
-  it('super filtra pela menor odd ≤ 1.40', () => {
-    expect(filterScannerGames(oddsGames, { oddsPreset: 'super' }).map((g) => g.id)).toEqual(['o1'])
+  it('favorito pega as duas faixas antigas (≤ 2.05)', () => {
+    expect(filterScannerGames(oddsGames, { oddsPreset: 'favorito' }).map((g) => g.id)).toEqual(['o1', 'o2'])
   })
 
-  it('favoritos pega o lado fora (min 1.41–2.05)', () => {
-    expect(filterScannerGames(oddsGames, { oddsPreset: 'favoritos' }).map((g) => g.id)).toEqual(['o2'])
-  })
-
-  it('fav_por_odd pega jogos com os dois lados acima de 2.05', () => {
-    expect(filterScannerGames(oddsGames, { oddsPreset: 'fav_por_odd' }).map((g) => g.id)).toEqual(['o3'])
+  it('parelho pega jogos com os dois lados acima de 2.05', () => {
+    expect(filterScannerGames(oddsGames, { oddsPreset: 'parelho' }).map((g) => g.id)).toEqual(['o3'])
   })
 
   it('jogo sem prematch sai com preset ativo', () => {
-    expect(filterScannerGames(oddsGames, { oddsPreset: 'super' }).some((g) => g.id === 'o4')).toBe(false)
+    expect(filterScannerGames(oddsGames, { oddsPreset: 'favorito' }).some((g) => g.id === 'o4')).toBe(false)
   })
 
   it('todos (default) mantém jogos sem odds', () => {
@@ -144,8 +140,8 @@ describe('filterScannerGames — preset de odds', () => {
   })
 
   it('combina com busca (interseção)', () => {
-    expect(filterScannerGames(oddsGames, { query: 'avai', oddsPreset: 'fav_por_odd' }).map((g) => g.id)).toEqual(['o3'])
-    expect(filterScannerGames(oddsGames, { query: 'flamengo', oddsPreset: 'fav_por_odd' })).toHaveLength(0)
+    expect(filterScannerGames(oddsGames, { query: 'avai', oddsPreset: 'parelho' }).map((g) => g.id)).toEqual(['o3'])
+    expect(filterScannerGames(oddsGames, { query: 'flamengo', oddsPreset: 'parelho' })).toHaveLength(0)
   })
 
   it('combina com só notificados (interseção)', () => {
@@ -160,8 +156,8 @@ describe('filterScannerGames — preset de odds', () => {
         odds: { prematch: { home: 1.3, away: 4 } },
       },
     ]
-    expect(filterScannerGames(g, { onlyNotified: true, oddsPreset: 'super' })).toHaveLength(1)
-    expect(filterScannerGames(g, { onlyNotified: true, oddsPreset: 'favoritos' })).toHaveLength(0)
+    expect(filterScannerGames(g, { onlyNotified: true, oddsPreset: 'favorito' })).toHaveLength(1)
+    expect(filterScannerGames(g, { onlyNotified: true, oddsPreset: 'parelho' })).toHaveLength(0)
   })
 })
 
