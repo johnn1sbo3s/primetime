@@ -1,27 +1,24 @@
 // app/utils/oddsPresets.js
 // Faixas de odds pré-jogo (casa/fora) para os filtros do scanner e do
 // relatório. A regra olha a MENOR das odds dos dois times (a odd do
-// favorito): Super ≤ 1.40, Favoritos 1.41–2.05, Fav. por odd > 2.05.
+// favorito): Favorito ≤ 2.05, Parelho > 2.05.
 // Faixas contíguas e mutuamente exclusivas para odds com 2 casas.
 // Funções puras, testadas em tests/app/utils/oddsPresets.spec.ts.
 export const ODDS_PRESETS = {
   todos: null,
-  super: { max: 1.4 },
-  favoritos: { min: 1.41, max: 2.05 },
-  fav_por_odd: { min: 2.06 }, // 2.06 = primeiro representável acima de 2.05 (odds com 2 casas)
+  favorito: { max: 2.05 },
+  parelho: { min: 2.06 }, // 2.06 = primeiro representável acima de 2.05 (odds com 2 casas)
 }
 
 export const ODDS_PRESET_LABELS = {
   todos: 'Todos',
-  super: 'Super fav.',
-  favoritos: 'Favoritos',
-  fav_por_odd: 'Fav. por odd',
+  favorito: 'Favorito',
+  parelho: 'Parelho',
 }
 
 export const ODDS_PRESET_TITLES = {
-  super: 'favorito esmagador',
-  favoritos: 'favorito claro',
-  fav_por_odd: 'Favorito por odd — os dois lados acima de 2.05',
+  favorito: 'favorito — menor odd até 2.05',
+  parelho: 'jogo parelho — os dois lados acima de 2.05',
 }
 
 // Opções prontas para o SegmentedControl das duas páginas (title undefined
