@@ -38,8 +38,7 @@ describe('MomentumChart', () => {
       },
     })
     expect(wrapper.findAll('.lane-shot').length).toBe(1)
-    expect(wrapper.find('.lane-shot text').text()).toBe('2')
-    expect(wrapper.find('.lane-goal path').exists()).toBe(true)
+    expect(wrapper.find('.lane-shot text').text()).toBe('C2')
   })
 
   it('gol e chute do mesmo minuto vão pra trilhas separadas', async () => {

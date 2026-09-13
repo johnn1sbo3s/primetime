@@ -38,11 +38,11 @@
               :y="lane.cy"
               text-anchor="middle"
               dominant-baseline="central"
-              font-size="14"
+              font-size="11"
               font-weight="bold"
               fill="#ffffff"
             >
-              {{ item.shownShot.tier.slice(1) }}
+              {{ item.shownShot.tier }}
             </text>
           </g>
 
