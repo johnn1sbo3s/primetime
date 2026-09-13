@@ -24,14 +24,7 @@
           >
             <circle :cx="item.x" :cy="lane.cy" r="14" fill="transparent" />
 
-            <circle
-              :cx="item.x"
-              :cy="lane.cy"
-              r="10"
-              fill="#27272a"
-              :stroke="teamColor(item.team)"
-              stroke-width="2.5"
-            />
+            <circle :cx="item.x" :cy="lane.cy" r="10" fill="#27272a" />
 
             <text
               :x="item.x"
