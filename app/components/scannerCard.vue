@@ -473,7 +473,6 @@ function retryXg() {
 const STAT_LABELS = [
   ['shots', 'FINALIZAÇÕES', 0, ''],
   ['big_chances', 'CHANCES CLARAS', 0, ''],
-  ['box_touches', 'TOQUES NA ÁREA', 0, ''],
 ]
 
 const CONTROL_HINT =
