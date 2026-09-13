@@ -504,3 +504,9 @@ Mudanças (já implementadas em `9d82a26`):
 ### Task 6 (pós-smoke): 4 trilhas, ticks 60/75/90, barras w6, sem linha ao vivo
 
 Pedido direto do usuário no smoke: barras mais grossas (5→6); duas trilhas por time (gols + chutes/alertas, casa em cima e fora embaixo, alerta segue a pressão do minuto); ticks do 2ºT 60/75/90; linha vermelha removida (ficava atrás e atrasada). Implementado em `722d8fb`: `buildTracks` substitui `layoutLane`/`stackRows` (merge de vizinhos com popover multi-minuto), badge sempre acima do marcador (abaixo só na trilha de chutes de fora).
+
+---
+
+### Task 7 (nova): container com largura ajustável no scanner
+
+Pedido do usuário: só no /scanner, embrulhar o conteúdo num container com arrasto livre (desktop), mínimo = largura de hoje, sem reflow pra baixo. Implementado em `7d49cf4`: `app/components/resizableContainer.vue` (drag simétrico 2*dx, min = largura natural medida no mount, max = viewport-32, persiste em `dataplaybets:scanner-width`, breakout do UContainer só ≥lg via media query, sem CSS resize pra não cortar popovers) + embrulho em `app/pages/scanner.vue`. Sem container queries (mínimo = hoje dispensa reflow).
