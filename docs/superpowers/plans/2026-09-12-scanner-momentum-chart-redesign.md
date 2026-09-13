@@ -487,3 +487,14 @@ git commit -m "feat: alimenta faixa de incidentes do gráfico"
 1. `pnpm test:unit` completo verde.
 2. Smoke no navegador real (dev 3001 + snapshot real): carga, faixa renderiza, cluster legível, popover hover + toque, minuto atualiza no long-polling.
 3. **Calibragem com o usuário**: r bola (10–12), respiro 30, altura da faixa — critério: cluster 42'/43' legível no card de 400px.
+
+---
+
+### Task 5 (pós-smoke): faixas por lado + empilhamento, sem linhas-guia
+
+Motivo: no navegador real, a faixa única com cascata empilhou (badge estourava o vizinho; cascata só ia pra esquerda) e o usuário lembrou o combinado original (fora embaixo) e pediu a remoção das linhas-guia.
+
+Mudanças (já implementadas em `9d82a26`):
+- `app/utils/scannerIncidents.js`: `layoutLane` removido; `sideOf(group, bars)` (gol/chute herdam o time, alerta segue a pressão do minuto) + `stackRows(entries, pitch=26)` (x nunca muda; fileira 1 em colisão; 3º funde `extra` no vizinho).
+- `app/components/momentumChart.vue`: `lanes` (top rows `[23,43]`, bot rows `[212,234]`), viewBox `640x252`, sem líderes, sem balões (hit circle r14 transparente), linha ao vivo até `y=196`.
+- Specs atualizados; suíte 338 verde.
