@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="relative">
     <svg
       v-if="bars.length"
       viewBox="0 0 640 214"
@@ -23,7 +23,16 @@
           stroke-width="1.2"
         />
 
-        <g v-if="item.group.winner === 'shot'" class="lane-shot">
+        <g
+          v-if="item.group.winner === 'shot'"
+          class="lane-shot"
+          tabindex="0"
+          @mouseenter="activeKey = minKey(item.group)"
+          @mouseleave="activeKey = null"
+          @focus="activeKey = minKey(item.group)"
+          @blur="activeKey = null"
+          @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
+        >
           <circle
             :cx="item.x"
             cy="26"
@@ -46,13 +55,31 @@
           </text>
         </g>
 
-        <g v-else-if="item.group.winner === 'goal'" class="lane-goal">
+        <g
+          v-else-if="item.group.winner === 'goal'"
+          class="lane-goal"
+          tabindex="0"
+          @mouseenter="activeKey = minKey(item.group)"
+          @mouseleave="activeKey = null"
+          @focus="activeKey = minKey(item.group)"
+          @blur="activeKey = null"
+          @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
+        >
           <circle :cx="item.x" cy="26" r="10" fill="#f4f4f5" />
 
           <path :d="BALL_PATH" :fill="teamColor(item.group.goal.team)" :transform="ballTransform(item.x)" />
         </g>
 
-        <g v-else class="lane-alert">
+        <g
+          v-else
+          class="lane-alert"
+          tabindex="0"
+          @mouseenter="activeKey = minKey(item.group)"
+          @mouseleave="activeKey = null"
+          @focus="activeKey = minKey(item.group)"
+          @blur="activeKey = null"
+          @click.stop="activeKey = activeKey === minKey(item.group) ? null : minKey(item.group)"
+        >
           <path :d="diamondD(item.x)" fill="none" stroke="#fbbf24" stroke-width="2" />
         </g>
 
@@ -125,6 +152,19 @@
     </svg>
 
     <p v-else class="py-6 text-center text-xs text-zinc-500">aguardando dados do gráfico</p>
+
+    <div
+      v-if="activeGroup"
+      class="lane-pop absolute top-0 left-1/2 z-10 max-w-60 -translate-x-1/2 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-zinc-100 shadow-lg"
+    >
+      <p class="font-bold">{{ activeGroup.minute }}'</p>
+
+      <p v-if="activeGroup.goal">{{ goalLabel(activeGroup.goal) }}</p>
+
+      <p v-for="(s, i) in activeGroup.shots" :key="'shot' + i">{{ shotLabel(s) }}</p>
+
+      <p v-for="(a, i) in activeGroup.alerts" :key="'alert' + i">{{ a.label }}</p>
+    </div>
   </div>
 </template>
 
@@ -235,6 +275,20 @@ function ballTransform(x) {
 
 function diamondD(x) {
   return `M ${x} 16 L ${x + 10} 26 L ${x} 36 L ${x - 10} 26 Z`
+}
+
+// Popover do minuto: chave half:minuto do grupo ativo.
+// Gol mostra só o time, nunca o jogador.
+const activeKey = ref(null)
+const minKey = (g) => g.half + ':' + g.minute
+const activeGroup = computed(
+  () => laneItems.value.map((i) => i.group).find((g) => minKey(g) === activeKey.value) || null,
+)
+function goalLabel(goal) {
+  return goal.team === 'home' ? 'Gol — casa' : 'Gol — fora'
+}
+function shotLabel(s) {
+  return s.label || `Chance ${s.tier}`
 }
 </script>
 

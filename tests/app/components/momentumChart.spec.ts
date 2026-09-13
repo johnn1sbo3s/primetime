@@ -147,4 +147,39 @@ describe('MomentumChart', () => {
     const rects = wrapper.findAll('rect')
     expect(Number(rects[1].attributes('x'))).toBeCloseTo(P2_SYMMETRIC, 1) // h1Len=45, h2Len=45
   })
+
+  it('hover no marcador abre o popover do minuto', async () => {
+    const wrapper = await mountSuspended(MomentumChart, {
+      props: {
+        bars: [{ minute: 35, home: 0.79, away: 0.12 }],
+        goals: [],
+        shots: [{ minute: 35, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
+        notifications: [{ rule: 'r', label: 'Pico do favorito', minute: 35, at: 't' }],
+        minute: 40,
+      },
+    })
+    expect(wrapper.find('.lane-pop').exists()).toBe(false)
+    await wrapper.find('.lane-shot').trigger('mouseenter')
+    expect(wrapper.find('.lane-pop').exists()).toBe(true)
+    expect(wrapper.find('.lane-pop').text()).toContain("35'")
+    expect(wrapper.find('.lane-pop').text()).toContain('Pico do favorito')
+    await wrapper.find('.lane-shot').trigger('mouseleave')
+    expect(wrapper.find('.lane-pop').exists()).toBe(false)
+  })
+
+  it('toque no marcador alterna o popover sem propagar o clique', async () => {
+    const wrapper = await mountSuspended(MomentumChart, {
+      props: {
+        bars: [{ minute: 35, home: 0.79, away: 0.12 }],
+        goals: [],
+        shots: [{ minute: 35, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
+        notifications: [],
+        minute: 40,
+      },
+    })
+    await wrapper.find('.lane-shot').trigger('click')
+    expect(wrapper.find('.lane-pop').exists()).toBe(true)
+    await wrapper.find('.lane-shot').trigger('click')
+    expect(wrapper.find('.lane-pop').exists()).toBe(false)
+  })
 })
