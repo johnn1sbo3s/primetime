@@ -13,7 +13,7 @@ describe('groupIncidents', () => {
     expect(groups[0].extra).toBe(2)
   })
 
-  it('ignora C4 e tiers/teams inválidos', () => {
+  it('inclui C4 e ignora tiers/teams inválidos', () => {
     const groups = groupIncidents({
       shots: [
         { minute: 10, team: 'home', tier: 'C4', xg_delta: 0.01 },
@@ -23,7 +23,8 @@ describe('groupIncidents', () => {
       goals: [],
       notifications: [],
     })
-    expect(groups).toHaveLength(0)
+    expect(groups).toHaveLength(1)
+    expect(groups[0].shots[0].tier).toBe('C4')
   })
 
   it('minuto só com alerta vira winner alert', () => {
