@@ -140,7 +140,8 @@
 
     <div
       v-if="activeTrack"
-      class="lane-pop absolute top-0 left-1/2 z-10 max-w-60 -translate-x-1/2 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-zinc-100 shadow-lg"
+      class="lane-pop absolute top-0 z-10 max-w-60 -translate-x-1/2 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-zinc-100 shadow-lg"
+      :style="{ left: popLeft }"
     >
       <template v-for="g in activeTrack.groups" :key="g.half + ':' + g.minute">
         <p class="font-bold">{{ g.minute }}'</p>
@@ -273,6 +274,12 @@ function diamondD(x, cy) {
 // Gol mostra só o time, nunca o jogador.
 const activeKey = ref(null)
 const activeTrack = computed(() => laneItems.value.find((i) => trackKey(i) === activeKey.value) || null)
+// Popover ancorado no marcador (clamp pra não vazar do card).
+const popLeft = computed(() => {
+  if (!activeTrack.value) return '50%'
+  const pct = (activeTrack.value.x / 640) * 100
+  return Math.min(Math.max(pct, 30), 70) + '%'
+})
 function goalLabel(goal) {
   return goal.team === 'home' ? 'Gol — casa' : 'Gol — fora'
 }
