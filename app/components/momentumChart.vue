@@ -79,11 +79,11 @@
           </g>
 
           <g v-if="item.extra > 0" class="lane-more">
-            <circle :cx="item.x + 10" :cy="lane.cy + lane.badgeDir * 10" r="9" fill="#52525b" />
+            <circle :cx="item.x + 11" :cy="lane.cy + lane.badgeDir * 11" r="9" fill="#52525b" />
 
             <text
-              :x="item.x + 10"
-              :y="lane.cy + lane.badgeDir * 10"
+              :x="item.x + 11"
+              :y="lane.cy + lane.badgeDir * 11"
               text-anchor="middle"
               dominant-baseline="central"
               font-size="11"
@@ -240,9 +240,9 @@ function barY(b) {
   return Number(b.home) > 0 ? CENTER - barHeight(b) : CENTER
 }
 
-// Quatro trilhas: gol/shots da casa em cima, shots/gol de fora embaixo.
-// x exato pelo barX; vizinhos da mesma trilha fundem (popover lista os
-// minutos fundidos). laneItems alimenta o popover.
+// Quatro trilhas: shots/gol da casa em cima, gol/shots de fora embaixo
+// (gol sempre colado no gráfico). x exato pelo barX; vizinhos da mesma
+// trilha fundem (popover lista os minutos fundidos).
 const lanes = computed(() => {
   const tracks = buildTracks(
     { shots: snapShotsToGoals(props.shots, props.goals), goals: props.goals, notifications: props.notifications },
@@ -251,10 +251,10 @@ const lanes = computed(() => {
   )
   const of = (team, kind) => tracks.filter((t) => t.team === team && t.kind === kind)
   return [
-    { key: 'gH', cy: 16, badgeDir: -1, items: of('home', 'goal') },
-    { key: 'sH', cy: 40, badgeDir: -1, items: of('home', 'shots') },
-    { key: 'sA', cy: 216, badgeDir: 1, items: of('away', 'shots') },
-    { key: 'gA', cy: 240, badgeDir: 1, items: of('away', 'goal') },
+    { key: 'sH', cy: 20, badgeDir: -1, items: of('home', 'shots') },
+    { key: 'gH', cy: 44, badgeDir: -1, items: of('home', 'goal') },
+    { key: 'gA', cy: 208, badgeDir: 1, items: of('away', 'goal') },
+    { key: 'sA', cy: 232, badgeDir: 1, items: of('away', 'shots') },
   ]
 })
 const laneItems = computed(() => lanes.value.flatMap((l) => l.items))
