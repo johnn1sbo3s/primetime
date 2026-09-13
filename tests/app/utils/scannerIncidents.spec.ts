@@ -91,4 +91,31 @@ describe('layoutLane', () => {
     expect(xs[2] - xs[1]).toBeGreaterThanOrEqual(30)
     expect(placed.find((p) => p.group.winner === 'goal').x).toBe(430)
   })
+
+  it('cluster real (Lecce): nenhum par divide o x com pitch 46', () => {
+    const STEP = 632 / 90
+    const groups = groupIncidents({
+      shots: [
+        { minute: 3, team: 'home', tier: 'C3', xg_delta: 0.1 },
+        { minute: 13, team: 'home', tier: 'C2', xg_delta: 0.3 },
+        { minute: 13, team: 'away', tier: 'C2', xg_delta: 0.25 },
+        { minute: 22, team: 'home', tier: 'C3', xg_delta: 0.1 },
+        { minute: 22, team: 'away', tier: 'C1', xg_delta: 0.6 },
+        { minute: 23, team: 'home', tier: 'C1', xg_delta: 0.55 },
+        { minute: 25, team: 'away', tier: 'C2', xg_delta: 0.3 },
+      ],
+      goals: [
+        { minute: 3, team: 'home', player: 'a' },
+        { minute: 10, team: 'home', player: 'b' },
+        { minute: 20, team: 'away', player: 'c' },
+        { minute: 21, team: 'home', player: 'd' },
+      ],
+      notifications: [],
+    })
+    const placed = layoutLane(groups, (g) => (g.minute - 1) * STEP, 46)
+    const xs = placed.map((p) => p.x).sort((a, b) => a - b)
+    for (let i = 1; i < xs.length; i++) {
+      expect(xs[i] - xs[i - 1]).toBeGreaterThanOrEqual(46 - 1e-6)
+    }
+  })
 })

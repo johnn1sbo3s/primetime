@@ -63,34 +63,56 @@ export function layoutLane(groups, xOf, gap = 30) {
     g.x = Math.max(g.trueX, prev + gap)
     prev = g.x
   }
-  // Resto: relaxamento em 2 passadas, gols fixos. Esquerda→direita empurra
-  // pra direita, direita→esquerda puxa pra esquerda; ordem preservada, então
-  // líderes nunca cruzam. Sobra só em aperto patológico (3+ itens em <2*gap
-  // com gol fixo no meio) — aí o líder mostra o minuto verdadeiro.
-  const asc = [...items].sort((a, b) => a.x - b.x || (a.group.winner === 'goal' ? -1 : 1))
-  let p = -Infinity
-  for (const it of asc) {
-    if (it.group.winner === 'goal') {
-      p = it.x
-      continue
+  // Não-gols: cada um entra na cadeia do gol mais próximo (empate → esquerda).
+  // Cadeia esquerda cascateia pra esquerda do gol, direita pra direita:
+  // ordem preservada, líderes nunca cruzam.
+  const chains = new Map()
+  for (const it of items) {
+    if (it.group.winner === 'goal') continue
+    let anchor = null
+    let best = Infinity
+    for (const g of goals) {
+      const d = Math.abs(it.trueX - g.x)
+      if (d < best) {
+        best = d
+        anchor = g
+      }
     }
-    if (it.x < p + gap) it.x = p + gap
-    p = it.x
+    const side = anchor && it.trueX > anchor.x ? 'R' : 'L'
+    const key = side + (anchor ? anchor.x : 'free')
+    if (!chains.has(key)) chains.set(key, { anchor, side, list: [] })
+    chains.get(key).list.push(it)
   }
-  const desc = [...items].sort((a, b) => b.x - a.x || (a.group.winner === 'goal' ? 1 : -1))
-  p = Infinity
-  for (const it of desc) {
-    if (it.group.winner === 'goal') {
-      p = it.x
-      continue
+  for (const { anchor, side, list } of chains.values()) {
+    if (side === 'L') {
+      list.sort((a, b) => b.trueX - a.trueX)
+      let cursor = anchor ? anchor.x - gap : 640
+      for (const it of list) {
+        it.x = Math.min(it.trueX, cursor)
+        cursor = it.x - gap
+      }
+    } else {
+      list.sort((a, b) => a.trueX - b.trueX)
+      let cursor = anchor ? anchor.x + gap : 0
+      for (const it of list) {
+        it.x = Math.max(it.trueX, cursor)
+        cursor = it.x + gap
+      }
     }
-    if (it.x > p - gap) it.x = p - gap
-    p = it.x
+  }
+  // Rede de segurança: varredura final — nenhum par divide o mesmo x.
+  const asc = [...items].sort((a, b) => a.x - b.x)
+  let q = -Infinity
+  for (const it of asc) {
+    if (it.x < q + gap) it.x = q + gap
+    q = it.x
   }
   // Guarda de borda: faixa é 0..640.
   if (items.length > 0) {
     const xs = items.map((i) => i.x)
-    const shift = Math.min(...xs) < 0 ? -Math.min(...xs) : Math.max(...xs) > 640 ? 640 - Math.max(...xs) : 0
+    const lo = Math.min(...xs)
+    const hi = Math.max(...xs)
+    const shift = lo < 0 ? -lo : hi > 640 ? 640 - hi : 0
     if (shift !== 0) for (const it of items) it.x += shift
   }
   for (const it of items) it.leaderTo = it.x === it.trueX ? null : it.trueX
