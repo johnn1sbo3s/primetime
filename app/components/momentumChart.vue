@@ -24,14 +24,14 @@
           >
             <circle :cx="item.x" :cy="lane.cy" r="14" fill="transparent" />
 
-            <circle :cx="item.x" :cy="lane.cy" r="10" fill="#27272a" />
+            <circle :cx="item.x" :cy="lane.cy" r="10" fill="#3f3f46" />
 
             <text
               :x="item.x"
               :y="lane.cy"
               text-anchor="middle"
               dominant-baseline="central"
-              font-size="11"
+              font-size="13"
               font-weight="bold"
               fill="#ffffff"
             >
