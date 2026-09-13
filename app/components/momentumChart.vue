@@ -145,7 +145,7 @@
     >
       <template v-for="g in activeTrack.groups" :key="g.half + ':' + g.minute">
         <p v-if="g.goal">
-          <span class="font-bold">{{ g.minute }}'</span> Gol - {{ g.goal.team === 'home' ? 'casa' : 'fora' }}
+          <span class="font-bold">{{ g.minute }}'</span> Gol
         </p>
 
         <p v-for="(s, i) in g.shots" :key="'shot' + i">
