@@ -212,4 +212,22 @@ describe('MomentumChart', () => {
     await wrapper.find('.lane-shot').trigger('click')
     expect(wrapper.find('.lane-pop').exists()).toBe(false)
   })
+
+  it('hover na faixa de baixo abre o popover embaixo com conteúdo de fora', async () => {
+    const wrapper = await mountSuspended(MomentumChart, {
+      props: {
+        bars: [{ minute: 30, home: 0.1, away: 0.7 }],
+        goals: [],
+        shots: [{ minute: 30, team: 'away', tier: 'C1', xg_delta: 0.6, label: 'Grande chance' }],
+        notifications: [],
+      },
+    })
+    await wrapper.find('.lane-shot').trigger('mouseenter')
+    const pop = wrapper.find('.lane-pop')
+    expect(pop.exists()).toBe(true)
+    expect(pop.text()).toContain('Grande chance')
+    expect(pop.element.style.top).toBe('auto')
+    expect(pop.element.style.bottom).toBe('18%')
+    expect(pop.classes()).toContain('pointer-events-none')
+  })
 })

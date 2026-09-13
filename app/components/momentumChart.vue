@@ -140,8 +140,8 @@
 
     <div
       v-if="activeTrack"
-      class="lane-pop absolute top-0 z-10 max-w-60 -translate-x-1/2 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-zinc-100 shadow-lg"
-      :style="{ left: popLeft }"
+      class="lane-pop pointer-events-none absolute z-10 max-w-60 -translate-x-1/2 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-zinc-100 shadow-lg"
+      :style="{ left: popLeft, top: popTop, bottom: popBottom }"
     >
       <template v-for="g in activeTrack.groups" :key="g.half + ':' + g.minute">
         <p class="font-bold">{{ g.minute }}'</p>
@@ -280,6 +280,9 @@ const popLeft = computed(() => {
   const pct = (activeTrack.value.x / 640) * 100
   return Math.min(Math.max(pct, 30), 70) + '%'
 })
+// Faixa de cima: popover abaixo dos marcadores; faixa de baixo: acima.
+const popTop = computed(() => (activeTrack.value && activeTrack.value.team !== 'home' ? 'auto' : '20%'))
+const popBottom = computed(() => (activeTrack.value && activeTrack.value.team !== 'home' ? '18%' : 'auto'))
 function goalLabel(goal) {
   return goal.team === 'home' ? 'Gol — casa' : 'Gol — fora'
 }
