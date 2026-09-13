@@ -84,8 +84,9 @@ onMounted(() => {
   mql = window.matchMedia('(min-width: 1024px)')
   desktop.value = mql.matches
   mql.addEventListener('change', syncDesktop)
-  // outer é bloco full do UContainer: a largura dele É a natural (a de hoje)
-  naturalPx = outer.value?.getBoundingClientRect().width || 0
+  // Natural = largura do PAI (conteúdo do UContainer = a de hoje). Medir o
+  // outer daria 100vw por causa do breakout — foi o bug da página gigante.
+  naturalPx = outer.value?.parentElement?.getBoundingClientRect().width || 0
   if (desktop.value) {
     // inner começa exatamente na natural (mesma renderização de hoje)
     widthPx.value = naturalPx || null
