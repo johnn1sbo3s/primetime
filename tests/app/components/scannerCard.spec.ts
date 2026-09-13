@@ -3,7 +3,15 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ScannerCard from '~/components/scannerCard.vue'
+import MomentumChart from '~/components/momentumChart.vue'
 import { useFavorites } from '~/composables/useFavorites'
+
+vi.mock('~/composables/useXgHistory', () => ({
+  useXgHistory: () => ({
+    get: () => ({ status: 'done', response: { series: [] }, fetchedAt: Date.now(), error: null }),
+    load: vi.fn().mockResolvedValue({ series: [] }),
+  }),
+}))
 
 // O UTooltip (Nuxt UI v4) depende do TooltipProvider do reka-ui, que no app
 // real vem do UApp (app.vue) — ausente no mountSuspended isolado (o reka-ui
@@ -333,6 +341,24 @@ describe('ScannerCard', () => {
     const wrapper = await mountCard(ScannerCard, { props: { game: game() } })
     expect(rowValues(wrapper, 'CHUTES C1–C2')).toEqual({ home: '—', away: '—' })
     expect(rowValues(wrapper, 'C3')).toEqual({ home: '—', away: '—' })
+  })
+
+  it('repassa shots/notifications/minute ao MomentumChart', async () => {
+    const wrapper = await mountCard(ScannerCard, {
+      props: {
+        game: {
+          ...game(),
+          minute: 35,
+          momentum: [{ minute: 35, half: 1, home: 0.79, away: 0.12 }],
+          shot_events: [{ minute: 35, team: 'home', xg_delta: 0.3, tier: 'C2', label: 'Boa chance' }],
+          notifications: [{ rule: 'r', label: 'Pico', minute: 35, at: 't' }],
+        },
+      },
+    })
+    const chart = wrapper.findComponent(MomentumChart)
+    expect(chart.props('minute')).toBe(35)
+    expect(chart.props('notifications')).toHaveLength(1)
+    expect(chart.props('shots')).toEqual([{ minute: 35, team: 'home', xg_delta: 0.3, tier: 'C2', label: 'Boa chance' }])
   })
 })
 // Cenário mutável para o mock do composable de pré-jogo (vi.mock é hoisted —

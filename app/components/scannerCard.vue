@@ -163,7 +163,14 @@
           </div>
         </div>
 
-        <MomentumChart :bars="game.momentum" :goals="game.goals" class="mb-3" />
+        <MomentumChart
+          :bars="game.momentum"
+          :goals="game.goals"
+          :shots="chartShots"
+          :notifications="game.notifications ?? []"
+          :minute="game.minute"
+          class="mb-3"
+        />
 
         <div class="mt-auto flex flex-col gap-2">
           <div v-for="row in statRows" :key="row.label" class="flex flex-col gap-0.5">
@@ -367,12 +374,12 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { isRecentNotification } from '~/utils/scanner.js'
 import { modelNameToNaturalName } from '~/utils/resolveModelName'
 import { formatNumber, formatPercent } from '~/utils/formatNumber'
 import { computePressure, computeControl } from '~/utils/scannerPressure'
-import { mergeXgSeries, sumTiers } from '~/utils/scannerShots'
+import { collectShots, mergeXgSeries, sumTiers } from '~/utils/scannerShots'
 import { toBlob } from 'html-to-image'
 import { useFavorites } from '~/composables/useFavorites'
 import { usePreGameAnalysis } from '~/composables/usePreGameAnalysis'
@@ -409,10 +416,42 @@ function retryPreGame() {
 const { get: getXgState, load: loadXgHistory } = useXgHistory()
 const xgOpen = ref(false)
 const xgLiveSamples = ref([])
-let stopXgWatch = null
 const xgState = computed(() => getXgState(props.game.id))
 const xgLoading = computed(() => xgState.value.status === 'loading')
 const xgHistory = computed(() => xgState.value.response?.series ?? [])
+
+// Acumula o delta do ciclo sempre (não só com o modal aberto): o gráfico de
+// momentum precisa da série completa desde o mount.
+watch(
+  () => props.game.stats?.xg,
+  (xg) => {
+    const minute = props.game.minute
+    if (minute == null) return
+    const entry = {
+      minute: Number(minute),
+      xg_home: xg?.home ?? null,
+      xg_away: xg?.away ?? null,
+      // Delta do ciclo ainda não salvo no histórico: se o ponto ao vivo não
+      // carregar os chutes novos, o merge do gráfico apagaria os do minuto.
+      // Vazio = sem chute novo, normal (nunca erro/retry).
+      shot_events: props.game.shot_events ?? [],
+    }
+    if (entry.xg_home == null && entry.xg_away == null) return
+    // Upsert incremental com a função do gráfico: se o minuto não avançou
+    // (ex.: 90' + acréscimos), o ciclo novo NÃO substitui o ponto inteiro —
+    // o merge une por minuto (xg novo vence, shot_events dos ciclos se
+    // acumulam com dedup). Sem isto, chutes de um ciclo anterior no mesmo
+    // minuto seriam perdidos antes de o `merged` rodar.
+    xgLiveSamples.value = mergeXgSeries(xgLiveSamples.value, [entry])
+  },
+  { immediate: true },
+)
+
+onMounted(() => {
+  loadXgHistory(props.game.id).catch(() => {})
+})
+
+const chartShots = computed(() => collectShots(mergeXgSeries(xgHistory.value, xgLiveSamples.value)))
 
 async function openXgHistory() {
   xgOpen.value = true
@@ -422,40 +461,10 @@ async function openXgHistory() {
   } catch {
     // erro fica no estado
   }
-  if (stopXgWatch) stopXgWatch()
-  stopXgWatch = watch(
-    () => props.game.stats?.xg,
-    (xg) => {
-      if (!xgOpen.value) return
-      const minute = props.game.minute
-      if (minute == null) return
-      const entry = {
-        minute: Number(minute),
-        xg_home: xg?.home ?? null,
-        xg_away: xg?.away ?? null,
-        // Delta do ciclo ainda não salvo no histórico: se o ponto ao vivo não
-        // carregar os chutes novos, o merge do gráfico apagaria os do minuto.
-        // Vazio = sem chute novo, normal (nunca erro/retry).
-        shot_events: props.game.shot_events ?? [],
-      }
-      if (entry.xg_home == null && entry.xg_away == null) return
-      // Upsert incremental com a função do gráfico: se o minuto não avançou
-      // (ex.: 90' + acréscimos), o ciclo novo NÃO substitui o ponto inteiro —
-      // o merge une por minuto (xg novo vence, shot_events dos ciclos se
-      // acumulam com dedup). Sem isto, chutes de um ciclo anterior no mesmo
-      // minuto seriam perdidos antes de o `merged` rodar.
-      xgLiveSamples.value = mergeXgSeries(xgLiveSamples.value, [entry])
-    },
-    { immediate: true },
-  )
 }
 
 function closeXgHistory() {
   xgOpen.value = false
-  if (stopXgWatch) {
-    stopXgWatch()
-    stopXgWatch = null
-  }
 }
 
 function retryXg() {
