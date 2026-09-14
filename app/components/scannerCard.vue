@@ -252,7 +252,7 @@
           >
             <UIcon name="i-lucide-bell" class="shrink-0 text-teal-400" />
 
-            <span class="flex-1 font-semibold text-zinc-200">{{ n.label }}</span>
+            <span class="flex-1 font-semibold text-zinc-200">{{ entryTitle(n.rule, n.label) }}</span>
 
             <span class="text-2xs rounded-full bg-teal-500/10 px-1.5 py-0.5 font-bold text-teal-400"
               >{{ n.minute }}'</span
@@ -374,7 +374,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { isRecentNotification } from '~/utils/scanner.js'
+import { entryTitle, isRecentNotification } from '~/utils/scanner.js'
 import { modelNameToNaturalName } from '~/utils/resolveModelName'
 import { formatNumber, formatPercent } from '~/utils/formatNumber'
 import { computePressure, computeControl } from '~/utils/scannerPressure'

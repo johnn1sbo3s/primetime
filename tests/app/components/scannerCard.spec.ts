@@ -109,6 +109,19 @@ describe('ScannerCard', () => {
     expect(wrapper.find('.alert-tag').exists()).toBe(false)
   })
 
+  it('verso mostra título curto (entryTitle), não o label longo do backend', async () => {
+    const wrapper = await mountCard(ScannerCard, {
+      props: {
+        game: game([
+          { rule: 'entrada_gol_ht', label: 'Gol HT — entrada pra gol antes do intervalo', minute: 43, at: RECENT },
+        ]),
+      },
+    })
+    await wrapper.find('.perspective-distant').trigger('click')
+    expect(wrapper.text()).toContain('Gol HT')
+    expect(wrapper.text()).not.toContain('antes do intervalo')
+  })
+
   it('aplica luz viajante (hl-travel) quando highlighted (clique do Telegram)', async () => {
     const wrapper = await mountCard(ScannerCard, {
       props: { game: game([]), highlighted: true },

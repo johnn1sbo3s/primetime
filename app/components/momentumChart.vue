@@ -146,7 +146,7 @@
         </p>
 
         <p v-for="(a, i) in g.alerts" :key="'alert' + i">
-          <span class="font-bold">{{ g.minute }}'</span> {{ a.label }}
+          <span class="font-bold">{{ g.minute }}'</span> {{ entryTitle(a.rule, a.label) }}
         </p>
       </template>
     </div>
@@ -155,6 +155,7 @@
 
 <script setup>
 import { BALL_PATH, buildTracks, snapShotsToGoals } from '~/utils/scannerIncidents'
+import { entryTitle } from '~/utils/scanner'
 
 const props = defineProps({
   bars: { type: Array, default: () => [] },

@@ -197,6 +197,24 @@ describe('MomentumChart', () => {
     expect(wrapper.find('.lane-pop').exists()).toBe(false)
   })
 
+  it('popover mostra título curto do alerta, não o label longo do backend', async () => {
+    const wrapper = await mountSuspended(MomentumChart, {
+      props: {
+        bars: [{ minute: 35, home: 0.79, away: 0.12 }],
+        goals: [],
+        shots: [{ minute: 35, team: 'home', tier: 'C2', xg_delta: 0.3, label: 'Boa chance' }],
+        notifications: [
+          { rule: 'entrada_gol_ht', label: 'Gol HT — entrada pra gol antes do intervalo', minute: 35, at: 't' },
+        ],
+      },
+    })
+    await wrapper.find('.lane-shot').trigger('mouseenter')
+    const pop = wrapper.find('.lane-pop')
+    expect(pop.exists()).toBe(true)
+    expect(pop.text()).toContain('Gol HT')
+    expect(pop.text()).not.toContain('antes do intervalo')
+  })
+
   it('toque no marcador alterna o popover sem propagar o clique', async () => {
     const wrapper = await mountSuspended(MomentumChart, {
       props: {
