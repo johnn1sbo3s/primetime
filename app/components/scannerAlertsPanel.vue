@@ -71,9 +71,7 @@
               <span class="truncate text-xs font-bold text-zinc-100">{{ entryTitle(a.rule, a.label) }}</span>
             </span>
 
-            <span class="shrink-0 text-xs" :class="isFresh(a.at) ? 'font-bold text-teal-400' : 'text-zinc-500'">{{
-              formatAlertTime(a.at, now)
-            }}</span>
+            <span class="shrink-0 text-xs text-zinc-500">{{ formatAlertTime(a.at, now) }}</span>
           </span>
 
           <span class="truncate text-xs text-zinc-400">{{ a.home }} x {{ a.away }}</span>
@@ -263,9 +261,6 @@ function onRailSelect(gameId) {
 }
 function isNew(at) {
   return isRecentNotification([{ at }], Date.now(), 5)
-}
-function isFresh(at) {
-  return isRecentNotification([{ at }], now.value, 10)
 }
 function isUnseen(at) {
   const t = Date.parse(at)
