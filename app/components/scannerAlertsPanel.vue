@@ -6,16 +6,19 @@
     class="flex h-full w-72 shrink-0 flex-col overflow-hidden border-l border-zinc-700 bg-zinc-900"
   >
     <header class="flex items-center justify-between border-b border-zinc-800 px-3 py-2.5">
-      <span class="flex items-center gap-1.5 text-xs font-bold text-zinc-200">
+      <span class="relative flex items-center gap-1.5 text-xs font-bold text-zinc-200">
         <UIcon name="i-lucide-bell" class="h-3.5 w-3.5 text-zinc-400" />
         Alertas
+
+        <span
+          v-if="unseen > 0"
+          data-testid="unseen-badge"
+          class="text-2xs absolute -top-1.5 -right-3 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 font-bold text-white"
+          >{{ unseen > 9 ? '9+' : unseen }}</span
+        >
       </span>
 
       <span class="flex items-center gap-2">
-        <UBadge v-if="unseen > 0" data-testid="unseen-badge" color="primary" variant="solid" size="xs">{{
-          unseen
-        }}</UBadge>
-
         <UButton
           data-testid="panel-toggle"
           :icon="toggleIcon || 'i-lucide-panel-right-close'"
@@ -28,7 +31,21 @@
       </span>
     </header>
 
-    <div v-if="items.length === 0" class="px-3 py-8 text-center text-xs text-zinc-500">
+    <div v-if="loading" class="panel-skeleton flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-3 xl:max-h-none">
+      <div v-for="i in 4" :key="i" class="flex flex-col gap-1.5 border-b border-zinc-800/60 pb-2">
+        <div class="flex items-center justify-between gap-2">
+          <USkeleton class="h-4 w-24" />
+
+          <USkeleton class="h-3 w-10" />
+        </div>
+
+        <USkeleton class="h-3 w-3/4" />
+
+        <USkeleton class="h-4 w-12" />
+      </div>
+    </div>
+
+    <div v-else-if="items.length === 0" class="px-3 py-8 text-center text-xs text-zinc-500">
       Nenhum alerta de entrada hoje
     </div>
 
@@ -73,9 +90,16 @@
     key="alerts-rail"
     class="flex h-full w-11 shrink-0 cursor-pointer flex-col items-center gap-2 overflow-hidden border-l border-zinc-700 bg-zinc-900 py-3"
   >
-    <UIcon name="i-lucide-bell" class="h-4 w-4 shrink-0 text-zinc-400" />
+    <span class="relative shrink-0">
+      <UIcon name="i-lucide-bell" class="h-4 w-4 text-zinc-400" />
 
-    <UBadge v-if="unseen > 0" data-testid="unseen-badge" color="primary" variant="solid" size="xs">{{ unseen }}</UBadge>
+      <span
+        v-if="unseen > 0"
+        data-testid="unseen-badge"
+        class="text-2xs absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 font-bold text-white"
+        >{{ unseen > 9 ? '9+' : unseen }}</span
+      >
+    </span>
 
     <UButton
       data-testid="panel-toggle"
@@ -121,6 +145,7 @@ import {
 const props = defineProps({
   items: { type: Array, default: () => [] },
   open: { type: Boolean, default: true },
+  loading: { type: Boolean, default: false },
   toggleIcon: { type: String, default: '' },
   toggleLabel: { type: String, default: '' },
   collapseOnOutside: { type: Boolean, default: false },
@@ -129,6 +154,10 @@ const emit = defineEmits(['toggle', 'select', 'collapse'])
 
 const now = ref(Date.now())
 const seenAt = ref(loadAlertsSeenAt())
+// Congelado no mount: fundo mostra quem era novo ANTES de abrir; o badge
+// (seenAt) zera na abertura mas o fundo não apaga junto. Nada visto ainda
+// (seenAt=0) → marco 0, tudo com at válido destaca.
+const highlightSince = ref(seenAt.value)
 const unseen = computed(() => countUnseen(props.items, seenAt.value))
 const rootEl = ref(null)
 let timer = null
@@ -142,14 +171,20 @@ onMounted(() => {
     now.value = Date.now()
   }, 30_000)
   if (props.open) markSeen()
-  if (props.collapseOnOutside) document.addEventListener('click', onDocClick)
+  if (props.collapseOnOutside) {
+    document.addEventListener('click', onDocClick, true)
+    document.addEventListener('keydown', onKeyDown)
+  }
 })
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer)
-  document.removeEventListener('click', onDocClick)
+  document.removeEventListener('click', onDocClick, true)
+  document.removeEventListener('keydown', onKeyDown)
 })
-// Abrir zera o badge: tudo até agora passa a visto.
+// Abrir zera o badge, mas o FUNDO congela no valor anterior (senão apagava
+// junto e não servia de nada).
 function markSeen() {
+  highlightSince.value = seenAt.value
   seenAt.value = Date.now()
   saveAlertsSeenAt(seenAt.value)
 }
@@ -166,14 +201,9 @@ function onToggle() {
     document.querySelector('[data-testid="panel-toggle"]')?.focus({ preventScroll: true })
   })
 }
-// Sigla na rail: seleciona o jogo E abre a barra.
 function onRailSelect(gameId) {
   emit('select', gameId)
   emit('toggle')
-}
-function isUnseen(at) {
-  const t = Date.parse(at)
-  return Number.isFinite(t) && t > seenAt.value
 }
 function isNew(at) {
   return isRecentNotification([{ at }], Date.now(), 5)
@@ -181,15 +211,30 @@ function isNew(at) {
 function isFresh(at) {
   return isRecentNotification([{ at }], now.value, 10)
 }
-// Só a barra fixa do desktop usa a prop (drawer não): dentro com ela
-// FECHADA → expande; fora com ela ABERTA → colapsa. Toggle e siglas têm
-// handlers próprios com .stop e retornam antes.
+function isUnseen(at) {
+  const t = Date.parse(at)
+  return Number.isFinite(t) && t > highlightSince.value
+}
+// Só a barra fixa do desktop colapsa no clique fora (drawer não usa a prop):
+// dentro com ela FECHADA → expande; fora com ela ABERTA → colapsa. Toggle e
+// siglas têm handlers próprios com .stop e retornam antes. Capture: o card
+// tem flip no clique — o colapso consome o evento antes dele girar.
 function onDocClick(e) {
   if (e.target?.closest?.('[data-testid="panel-toggle"]')) return
   if (rootEl.value?.contains(e.target)) {
-    if (!props.open) emit('toggle')
+    if (!props.open) {
+      e.stopPropagation()
+      emit('toggle')
+    }
     return
   }
-  if (props.open) emit('collapse')
+  if (props.open) {
+    e.stopPropagation()
+    emit('collapse')
+  }
+}
+// ESC fecha a barra aberta.
+function onKeyDown(e) {
+  if (e.key === 'Escape' && props.open) emit('collapse')
 }
 </script>

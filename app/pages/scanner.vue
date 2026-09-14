@@ -186,6 +186,7 @@
       <ScannerAlertsPanel
         :items="panelItems"
         :open="!alertsCollapsed"
+        :loading="loading && !snapshot"
         collapse-on-outside
         @toggle="toggleAlertsCollapsed"
         @select="highlightGame"

@@ -130,7 +130,9 @@ it('sem collapseOnOutside o clique fora não emite (drawer)', async () => {
 })
 
 it('item não-visto tem fundo distinto; item visto não', async () => {
-  localStorage.removeItem(SEEN_KEY)
+  // Marco pré-semeado há 10min: item de 40min atrás já era visto (sem
+  // fundo), item de 2min é novo (com fundo) — mesmo com o badge zerado.
+  localStorage.setItem(SEEN_KEY, String(Date.now() - 10 * 60_000))
   const old = {
     gameId: 'm2',
     rule: 'entrada_fim_jogo',
@@ -142,22 +144,18 @@ it('item não-visto tem fundo distinto; item visto não', async () => {
     away: 'Chelsea',
     league: 'Inglaterra Premier',
   }
-  const w = await mountSuspended(ScannerAlertsPanel, { props: { items: [old], open: true } })
-  // Abrir marca tudo como visto: item antigo segue sem destaque…
-  expect(w.find('[data-testid="alert-m2-0"]').classes()).not.toContain('bg-teal-400/10')
-  // …mas alerta nascido depois (at > seenAt) entra com o fundo.
   const fresh = {
     gameId: 'm1',
     rule: 'entrada_gol_ht',
     label: 'GHT — gol no primeiro tempo',
     minute: 43,
     half: 1,
-    at: new Date(Date.now() + 60_000).toISOString(),
+    at: ago(2),
     home: 'Famalicão',
     away: 'Sporting',
     league: 'Portugal Liga',
   }
-  await w.setProps({ items: [fresh, old] })
+  const w = await mountSuspended(ScannerAlertsPanel, { props: { items: [fresh, old], open: true } })
   expect(w.find('[data-testid="alert-m1-0"]').classes()).toContain('bg-teal-400/10')
   expect(w.find('[data-testid="alert-m2-1"]').classes()).not.toContain('bg-teal-400/10')
   w.unmount()
@@ -178,5 +176,36 @@ it('sigla na rail seleciona e expande', async () => {
   await w.find('[data-testid="alert-m1-0"]').trigger('click')
   expect(w.emitted('select')).toEqual([['m1']])
   expect(w.emitted('toggle')).toHaveLength(1)
+  w.unmount()
+})
+
+it('loading mostra skeleton interno, não a lista', async () => {
+  const w = await mountSuspended(ScannerAlertsPanel, {
+    props: { items: [], open: true, loading: true },
+  })
+  expect(w.find('.panel-skeleton').exists()).toBe(true)
+  expect(w.find('.panel-list').exists()).toBe(false)
+  w.unmount()
+})
+
+it('badge é bola vermelha no canto do sino', async () => {
+  localStorage.removeItem(SEEN_KEY)
+  const w = await mountSuspended(ScannerAlertsPanel, {
+    props: { items: waveItems(), open: false, collapseOnOutside: true },
+  })
+  const badge = w.find('[data-testid="unseen-badge"]')
+  expect(badge.exists()).toBe(true)
+  expect(badge.classes()).toContain('bg-red-500')
+  expect(badge.classes()).toContain('rounded-full')
+  w.unmount()
+})
+
+it('ESC emite collapse com a barra aberta', async () => {
+  const w = await mountSuspended(ScannerAlertsPanel, {
+    props: { items: waveItems(), open: true, collapseOnOutside: true },
+    attachTo: document.body,
+  })
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+  expect(w.emitted('collapse')).toHaveLength(1)
   w.unmount()
 })
