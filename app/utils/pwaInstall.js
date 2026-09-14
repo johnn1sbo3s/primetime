@@ -10,7 +10,7 @@ export function isStandalone() {
   return navigator.standalone === true
 }
 
-export function isAgeGateDismissed(storage = localStorage) {
+export function isAgeGateDismissed(storage = globalThis.localStorage) {
   try {
     return storage.getItem(AGE_GATE_KEY) === '1'
   } catch {
@@ -18,7 +18,7 @@ export function isAgeGateDismissed(storage = localStorage) {
   }
 }
 
-export function wasDismissed(storage = localStorage) {
+export function wasDismissed(storage = globalThis.localStorage) {
   try {
     return storage.getItem(INSTALL_DISMISS_KEY) === '1'
   } catch {
@@ -26,7 +26,7 @@ export function wasDismissed(storage = localStorage) {
   }
 }
 
-export function dismissInstall(storage = localStorage) {
+export function dismissInstall(storage = globalThis.localStorage) {
   try {
     storage.setItem(INSTALL_DISMISS_KEY, '1')
   } catch {

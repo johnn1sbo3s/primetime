@@ -118,7 +118,7 @@ export function formatAlertTime(at, now = Date.now()) {
 // "Vistos" do painel: epoch ms da última abertura em
 // dataPlay.scanner.alertsSeenAt; badge = itens com at maior (estrito).
 const SEEN_KEY = 'dataPlay.scanner.alertsSeenAt'
-export function loadAlertsSeenAt(storage = localStorage) {
+export function loadAlertsSeenAt(storage = globalThis.localStorage) {
   try {
     const raw = storage.getItem(SEEN_KEY)
     const ts = Number(raw)
@@ -127,7 +127,7 @@ export function loadAlertsSeenAt(storage = localStorage) {
     return 0
   }
 }
-export function saveAlertsSeenAt(ts = Date.now(), storage = localStorage) {
+export function saveAlertsSeenAt(ts = Date.now(), storage = globalThis.localStorage) {
   try {
     storage.setItem(SEEN_KEY, String(ts))
   } catch {
@@ -251,21 +251,21 @@ export const SOUND_PRESETS = [
 const SOUND_KEY = 'dataPlay.scanner.alertsSound'
 const PRESET_KEY = 'dataPlay.scanner.alertSoundPreset'
 
-export function loadSoundEnabled(storage = localStorage) {
+export function loadSoundEnabled(storage = globalThis.localStorage) {
   try {
     return storage.getItem(SOUND_KEY) === '1'
   } catch {
     return false
   }
 }
-export function saveSoundEnabled(on, storage = localStorage) {
+export function saveSoundEnabled(on, storage = globalThis.localStorage) {
   try {
     storage.setItem(SOUND_KEY, on ? '1' : '0')
   } catch {
     // storage indisponível — segue sem persistir
   }
 }
-export function loadSoundPreset(storage = localStorage) {
+export function loadSoundPreset(storage = globalThis.localStorage) {
   try {
     const raw = storage.getItem(PRESET_KEY)
     return SOUND_PRESETS.some((p) => p.id === raw) ? raw : 'ping'
@@ -273,7 +273,7 @@ export function loadSoundPreset(storage = localStorage) {
     return 'ping'
   }
 }
-export function saveSoundPreset(id, storage = localStorage) {
+export function saveSoundPreset(id, storage = globalThis.localStorage) {
   try {
     storage.setItem(PRESET_KEY, id)
   } catch {
