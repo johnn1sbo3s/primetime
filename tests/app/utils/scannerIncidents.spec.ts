@@ -36,6 +36,30 @@ describe('groupIncidents', () => {
     expect(groups[0].winner).toBe('alert')
     expect(groups[0].extra).toBe(0)
   })
+
+  it("alerta do 2º tempo agrupa sob half 2 (caso 66'/half 2)", () => {
+    const groups = groupIncidents({
+      shots: [],
+      goals: [],
+      notifications: [{ rule: 'r', label: 'Pico', minute: 66, half: 2, at: 't' }],
+    })
+    expect(groups).toHaveLength(1)
+    expect(groups[0].half).toBe(2)
+    expect(groups[0].minute).toBe(66)
+    expect(groups[0].alerts).toHaveLength(1)
+  })
+
+  it('eventos legados sem half agrupam sob half 1', () => {
+    const groups = groupIncidents({
+      shots: [{ minute: 66, team: 'away', tier: 'C3', xg_delta: 0.12 }],
+      goals: [],
+      notifications: [{ rule: 'r', label: 'Pico', minute: 66, at: 't' }],
+    })
+    expect(groups).toHaveLength(1)
+    expect(groups[0].half).toBe(1)
+    expect(groups[0].shots).toHaveLength(1)
+    expect(groups[0].alerts).toHaveLength(1)
+  })
 })
 
 describe('sideOf + buildTracks', () => {
@@ -114,6 +138,27 @@ describe('sideOf + buildTracks', () => {
     expect(tracks[0].extra).toBe(1)
   })
 
+  it("chute 66'/half 2 mapeia para o x do 2º painel, distinto do 1º tempo", () => {
+    // xOf imita o barX com split de painel: 2º tempo recomeça em rel 1
+    // (46' -> 1), então o mesmo minuto absoluto cai em x diferentes por half.
+    const xOf = (g) => (g.half === 2 ? 1000 + (g.minute - 45) * 10 : g.minute * 10)
+    const h1 = buildTracks(
+      { shots: [{ minute: 66, half: 1, team: 'away', tier: 'C3', xg_delta: 0.12 }], goals: [], notifications: [] },
+      [],
+      xOf,
+    )
+    const h2 = buildTracks(
+      { shots: [{ minute: 66, half: 2, team: 'away', tier: 'C3', xg_delta: 0.12 }], goals: [], notifications: [] },
+      [],
+      xOf,
+    )
+    expect(h1).toHaveLength(1)
+    expect(h2).toHaveLength(1)
+    expect(h1[0].half).toBe(1)
+    expect(h2[0].half).toBe(2)
+    expect(h2[0].x).toBe(1000 + 21 * 10)
+    expect(h2[0].x).not.toBe(h1[0].x)
+  })
   it('snap: chute do mesmo time a 1min do gol assume minuto e half do gol', () => {
     const shots = [
       { minute: 42, half: 1, team: 'home', tier: 'C2', xg_delta: 0.3 },

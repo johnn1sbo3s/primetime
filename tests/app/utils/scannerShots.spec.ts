@@ -256,6 +256,27 @@ describe('mergeXgSeries', () => {
     const merged = mergeXgSeries(history, [{ minute: 20, xg_home: 0.4, xg_away: 0.2, shot_events: [] }])
     expect(merged.map((p) => p.minute)).toEqual([10, 20]) // '90+1' descartado, não vira NaN
   })
+
+  it('mesmo minuto/team/delta em halves opostos coexistem (eventKey half-aware)', () => {
+    const h1 = { ...shotEv(66, 'away', 'C3', 0.12), half: 1 }
+    const h2 = { ...shotEv(66, 'away', 'C3', 0.12), half: 2 }
+    const history = [point(66, 0.9, 0.5, [h1])]
+    const live = [{ minute: 66, xg_home: 0.9, xg_away: 0.6, shot_events: [h2] }]
+    const merged = mergeXgSeries(history, live)
+    expect(merged).toHaveLength(1)
+    expect(merged[0].shot_events).toHaveLength(2)
+    expect(merged[0].shot_events).toContainEqual(h1)
+    expect(merged[0].shot_events).toContainEqual(h2)
+  })
+
+  it('legado sem half dedupa com half 1 explícito (ausente lê como 1)', () => {
+    const legacy = shotEv(66, 'away', 'C3', 0.12)
+    const explicit = { ...shotEv(66, 'away', 'C3', 0.12), half: 1 }
+    const history = [point(66, 0.9, 0.5, [legacy])]
+    const live = [{ minute: 66, xg_home: 0.9, xg_away: 0.6, shot_events: [explicit] }]
+    const merged = mergeXgSeries(history, live)
+    expect(merged[0].shot_events).toEqual([legacy])
+  })
 })
 
 describe('TIER_LABELS / tierLabel', () => {

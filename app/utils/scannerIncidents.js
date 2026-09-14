@@ -40,7 +40,7 @@ export function groupIncidents({ shots = [], goals = [], notifications = [] } = 
     if (!n || typeof n !== 'object') continue
     const minute = Number(n.minute)
     if (!Number.isFinite(minute)) continue
-    at(minute, 1).alerts.push(n)
+    at(minute, halfOf(n)).alerts.push(n)
   }
   const groups = [...byKey.values()].filter((g) => g.goal || g.shots.length > 0 || g.alerts.length > 0)
   for (const g of groups) {

@@ -1,22 +1,25 @@
 // app/utils/scannerShots.js
 // Tipos de chute (C1–C4) do scanner: contagem por nível × lado e merge do
 // gráfico de xG. Contrato do backend (momentum-scanner, TICKETS.md:5):
-// chute = {minute, team: 'home'|'away', xg_delta, tier: 'C1'..'C4', label};
-// C1 grande chance (>=0.50) / C2 boa chance (0.20–0.50) / C3 chance média
-// (0.05–0.20) / C4 sem perigo (<0.05). No live, game.shot_events é o delta
-// do ciclo (vazio = normal); no histórico, cada ponto carrega shot_events.
+// chute = {minute, half: 1|2, team: 'home'|'away', xg_delta, tier: 'C1'..'C4', label};
+// half ausente lê como 1. C1 grande chance (>=0.50) / C2 boa chance (0.20–0.50) /
+// C3 chance média (0.05–0.20) / C4 sem perigo (<0.05). No live, game.shot_events
+// é o delta do ciclo (vazio = normal); no histórico, cada ponto carrega shot_events.
 // Funções puras — mesmo estilo de scannerPressure.js (guards Array.isArray,
 // tolerantes a null/undefined, sem efeitos colaterais).
 
+// half ausente/inválido = 1 (mesma regra do halfOf de scannerIncidents.js;
+// duplicada aqui para não cruzar import de util — manter as duas em paridade).
+const halfOfEvent = (e) => (Number(e?.half) === 2 ? 2 : 1)
 const TIERS = ['C1', 'C2', 'C3', 'C4']
 
-// Chave de dedup: (minute, team, xg_delta) — mais forte que a do store
+// Chave de dedup: (minute, half, team, xg_delta) — mais forte que a do store
 // (team, xg_delta) e idêntica à do shot_totals do backend (event_key).
 // Paridade: o dedup roda aqui ANTES do filtro de tier (backend filtra
 // primeiro), mas a divergência é impossível — o tier é função determinística
 // do xg_delta, então a mesma chave nunca carrega tiers diferentes. O template
 // de string preserva a precisão do double vinda do backend (mesmo pipeline).
-const eventKey = (e) => `${e?.minute}|${e?.team}|${e?.xg_delta}`
+const eventKey = (e) => `${e?.minute}|${halfOfEvent(e)}|${e?.team}|${e?.xg_delta}`
 
 export function emptyShotTotals() {
   return {
@@ -28,7 +31,7 @@ export function emptyShotTotals() {
 }
 
 // Achata os shot_events dos pontos xG (histórico/merged) em 1 lista, com
-// dedup por (minute, team, xg_delta). Pontos sem shot_events, null ou
+// dedup por (minute, half, team, xg_delta). Pontos sem shot_events, null ou
 // não-lista → ignorados; eventos não-objeto → ignorados.
 export function collectShots(points) {
   const out = []
@@ -79,6 +82,8 @@ function unionEvents(...lists) {
 
 // Merge por minuto do gráfico xG: o xg do ponto ao vivo vence quando presente,
 // mas os shot_events do minuto = união (histórico + delta do ciclo) com dedup.
+// Pontos seguem por minuto; eventos do mesmo minuto em halves opostos coexistem
+// via eventKey half-aware e separam no groupIncidents.
 // Ordena por minuto; live vazio → histórico inalterado; pontos do live sem par
 // no histórico são acrescentados. Nunca muta as entradas (props reativas).
 export function mergeXgSeries(history, liveSamples) {
