@@ -143,18 +143,39 @@
 
     <div class="h-px w-6 shrink-0 bg-zinc-800" />
 
-    <div class="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto">
-      <button
-        v-for="(a, i) in items"
-        :key="`${a.gameId}|${a.rule}|${a.at}`"
-        :data-testid="`alert-${a.gameId}-${i}`"
-        :aria-label="`${a.home} x ${a.away}: ${entryTitle(a.rule, a.label)}`"
-        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-xs font-extrabold text-teal-400"
-        :class="{ 'border-amber-400/80': isNew(a.at) }"
-        @click.stop="onRailSelect(a.gameId)"
-      >
-        {{ entryTag(a.rule) }}
-      </button>
+    <div class="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-1 py-0.5">
+      <div v-if="unreadItems.length" class="flex flex-col items-center gap-2">
+        <button
+          v-for="a in unreadItems"
+          :key="`${a.gameId}|${a.rule}|${a.at}`"
+          :data-testid="`alert-${a.gameId}-${items.indexOf(a)}`"
+          :aria-label="`${a.home} x ${a.away}: ${entryTitle(a.rule, a.label)}`"
+          class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-teal-400 bg-teal-400 p-0.5 text-2xs leading-none font-extrabold text-zinc-950"
+          @click.stop="onRailSelect(a.gameId)"
+        >
+          {{ entryTag(a.rule) }}
+        </button>
+      </div>
+
+      <div
+        v-if="unreadItems.length && readItems.length"
+        data-testid="rail-unread-divider"
+        class="h-px w-6 shrink-0 bg-zinc-700"
+      />
+
+      <div class="flex flex-col items-center gap-2">
+        <button
+          v-for="a in readItems"
+          :key="`${a.gameId}|${a.rule}|${a.at}`"
+          :data-testid="`alert-${a.gameId}-${items.indexOf(a)}`"
+          :aria-label="`${a.home} x ${a.away}: ${entryTitle(a.rule, a.label)}`"
+          class="text-2xs flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 p-0.5 leading-none font-extrabold text-teal-400"
+          :class="{ 'border-amber-400/80': isNew(a.at) }"
+          @click.stop="onRailSelect(a.gameId)"
+        >
+          {{ entryTag(a.rule) }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -191,6 +212,8 @@ const seenAt = ref(loadAlertsSeenAt())
 // (seenAt=0) → marco 0, tudo com at válido destaca.
 const highlightSince = ref(seenAt.value)
 const unseen = computed(() => countUnseen(props.items, seenAt.value))
+const unreadItems = computed(() => props.items.filter((n) => (Date.parse(n?.at) || 0) > seenAt.value))
+const readItems = computed(() => props.items.filter((n) => (Date.parse(n?.at) || 0) <= seenAt.value))
 const rootEl = ref(null)
 let timer = null
 const emit = defineEmits(['toggle', 'select', 'collapse', 'sound-toggle', 'sound-pick'])

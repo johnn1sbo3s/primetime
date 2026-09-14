@@ -230,3 +230,22 @@ it('footer: toggle de som + presets; rail sem footer', async () => {
   expect(rail.find('[data-testid="sound-toggle"]').exists()).toBe(false)
   rail.unmount()
 })
+
+it('rail: não-lidas em cima com fundo teal + divider; lidas embaixo', async () => {
+  // Marco há 10min: item de 3min é não-lido (teal), item de 40min é lido.
+  localStorage.setItem(SEEN_KEY, String(Date.now() - 10 * 60_000))
+  const w = await mountSuspended(ScannerAlertsPanel, { props: { items: waveItems(), open: false } })
+  expect(w.find('[data-testid="rail-unread-divider"]').exists()).toBe(true)
+  const unread = w.find('[data-testid="alert-m1-0"]')
+  expect(unread.classes()).toContain('text-zinc-950')
+  const read = w.find('[data-testid="alert-m2-1"]')
+  expect(read.classes()).not.toContain('bg-teal-400')
+  // Abre (zera o badge) e colapsa: tudo vira lido, divider some.
+  await w.setProps({ open: true })
+  await w.vm.$nextTick()
+  await w.setProps({ open: false })
+  await w.vm.$nextTick()
+  expect(w.find('[data-testid="rail-unread-divider"]').exists()).toBe(false)
+  expect(w.find('[data-testid="alert-m1-0"]').classes()).not.toContain('bg-teal-400')
+  w.unmount()
+})
