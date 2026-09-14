@@ -209,3 +209,24 @@ it('ESC emite collapse com a barra aberta', async () => {
   expect(w.emitted('collapse')).toHaveLength(1)
   w.unmount()
 })
+
+it('footer: toggle de som + presets; rail sem footer', async () => {
+  const w = await mountSuspended(ScannerAlertsPanel, {
+    props: { items: waveItems(), open: true, soundEnabled: false, soundPreset: 'ping' },
+  })
+  const tgl = w.find('[data-testid="sound-toggle"]')
+  expect(tgl.exists()).toBe(true)
+  expect(tgl.attributes('aria-label')).toMatch(/ativar/i)
+  await tgl.trigger('click')
+  expect(w.emitted('sound-toggle')).toHaveLength(1)
+  const opts = w.findAll('[data-testid^="sound-preset-"]')
+  expect(opts.map((o) => o.attributes('data-testid'))).toEqual(
+    expect.arrayContaining(['sound-preset-ping', 'sound-preset-pop', 'sound-preset-chime']),
+  )
+  await w.find('[data-testid="sound-preset-chime"]').trigger('click')
+  expect(w.emitted('sound-pick')).toEqual([['chime']])
+  w.unmount()
+  const rail = await mountSuspended(ScannerAlertsPanel, { props: { items: waveItems(), open: false } })
+  expect(rail.find('[data-testid="sound-toggle"]').exists()).toBe(false)
+  rail.unmount()
+})

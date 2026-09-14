@@ -240,3 +240,43 @@ export function findNewEntries(prevByGame = {}, games = []) {
   }
   return added
 }
+
+// Som de alerta novo: opt-in desligado por default. Presets são ids de
+// oscilador WebAudio (ver alertSound.js) — sem arquivos de áudio.
+export const SOUND_PRESETS = [
+  { id: 'ping', label: 'Ping' },
+  { id: 'pop', label: 'Pop' },
+  { id: 'chime', label: 'Chime' },
+]
+const SOUND_KEY = 'dataPlay.scanner.alertsSound'
+const PRESET_KEY = 'dataPlay.scanner.alertSoundPreset'
+
+export function loadSoundEnabled(storage = localStorage) {
+  try {
+    return storage.getItem(SOUND_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+export function saveSoundEnabled(on, storage = localStorage) {
+  try {
+    storage.setItem(SOUND_KEY, on ? '1' : '0')
+  } catch {
+    // storage indisponível — segue sem persistir
+  }
+}
+export function loadSoundPreset(storage = localStorage) {
+  try {
+    const raw = storage.getItem(PRESET_KEY)
+    return SOUND_PRESETS.some((p) => p.id === raw) ? raw : 'ping'
+  } catch {
+    return 'ping'
+  }
+}
+export function saveSoundPreset(id, storage = localStorage) {
+  try {
+    storage.setItem(PRESET_KEY, id)
+  } catch {
+    // storage indisponível — segue sem persistir
+  }
+}

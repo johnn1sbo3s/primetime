@@ -45,8 +45,12 @@
       </div>
     </div>
 
-    <div v-else-if="items.length === 0" class="px-3 py-8 text-center text-xs text-zinc-500">
+    <div
+      v-else-if="items.length === 0"
+      class="flex min-h-0 flex-1 flex-col px-3 py-8 text-center text-xs text-zinc-500"
+    >
       Nenhum alerta de entrada hoje
+      <span class="flex-1" />
     </div>
 
     <ul v-else class="panel-list flex max-h-[55vh] min-h-0 flex-1 flex-col overflow-y-auto xl:max-h-none">
@@ -82,6 +86,32 @@
         </button>
       </li>
     </ul>
+
+    <footer class="flex shrink-0 items-center justify-between gap-2 border-t border-zinc-800 px-3 py-2">
+      <UButton
+        data-testid="sound-toggle"
+        :icon="soundEnabled ? 'i-lucide-volume-2' : 'i-lucide-volume-x'"
+        :aria-label="soundEnabled ? 'Desativar som de alerta' : 'Ativar som de alerta'"
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        @click.stop="$emit('sound-toggle')"
+      />
+
+      <div class="flex items-center gap-1">
+        <UButton
+          v-for="p in SOUND_PRESETS"
+          :key="p.id"
+          :data-testid="`sound-preset-${p.id}`"
+          :label="p.label"
+          :variant="soundPreset === p.id ? 'solid' : 'ghost'"
+          :aria-pressed="soundPreset === p.id"
+          color="neutral"
+          size="xs"
+          @click.stop="$emit('sound-pick', p.id)"
+        />
+      </div>
+    </footer>
   </div>
 
   <div
@@ -132,6 +162,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
+  SOUND_PRESETS,
   countUnseen,
   entryTag,
   entryTitle,
@@ -149,8 +180,9 @@ const props = defineProps({
   toggleIcon: { type: String, default: '' },
   toggleLabel: { type: String, default: '' },
   collapseOnOutside: { type: Boolean, default: false },
+  soundEnabled: { type: Boolean, default: false },
+  soundPreset: { type: String, default: 'ping' },
 })
-const emit = defineEmits(['toggle', 'select', 'collapse'])
 
 const now = ref(Date.now())
 const seenAt = ref(loadAlertsSeenAt())
@@ -161,6 +193,7 @@ const highlightSince = ref(seenAt.value)
 const unseen = computed(() => countUnseen(props.items, seenAt.value))
 const rootEl = ref(null)
 let timer = null
+const emit = defineEmits(['toggle', 'select', 'collapse', 'sound-toggle', 'sound-pick'])
 // Um único listener no documento (só com collapseOnOutside, i.e. barra fixa
 // do desktop): cliques reais no corpo da rail não chegam ao @click do Vue,
 // mas borbulham até o documento. Fechada + clique DENTRO → expande;

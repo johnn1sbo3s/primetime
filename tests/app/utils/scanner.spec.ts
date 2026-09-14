@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect } from 'vitest'
 import {
   isRecentNotification,
   formatUpdatedAgo,
@@ -18,6 +18,10 @@ import {
   loadAlertsSeenAt,
   saveAlertsSeenAt,
   countUnseen,
+  loadSoundEnabled,
+  saveSoundEnabled,
+  loadSoundPreset,
+  saveSoundPreset,
 } from '~/utils/scanner.js'
 const AT = '2026-08-07T23:55:03-03:00'
 const NOW = Date.parse('2026-08-07T23:59:03-03:00')
@@ -175,13 +179,14 @@ const live = (id: string, finished = false) => ({
 })
 
 describe('mergeDayEntries', () => {
+  const DAY = Date.parse('2026-09-13T15:00:00-03:00')
   it('anexa entradas de jogos vivos com metadados', () => {
-    const out = mergeDayEntries({ date: '2026-09-13', byGame: {} }, [live('m1')])
+    const out = mergeDayEntries({ date: '2026-09-13', byGame: {} }, [live('m1')], DAY)
     expect(out.byGame.m1[0]).toMatchObject({ rule: 'entrada_ltd', home: 'Casa', gameId: 'm1' })
   })
   it('não duplica no re-merge (dedupe rule|at)', () => {
-    const once = mergeDayEntries({ date: '2026-09-13', byGame: {} }, [live('m1')])
-    const twice = mergeDayEntries(once, [live('m1')])
+    const once = mergeDayEntries({ date: '2026-09-13', byGame: {} }, [live('m1')], DAY)
+    const twice = mergeDayEntries(once, [live('m1')], DAY)
     expect(twice.byGame.m1).toHaveLength(1)
   })
   it('remove jogos finalizados do guardado', () => {
@@ -189,7 +194,7 @@ describe('mergeDayEntries', () => {
       date: '2026-09-13',
       byGame: { m9: [{ rule: 'entrada_ltd', label: 'x', minute: 80, at: '2026-09-13T13:00:00-03:00', gameId: 'm9' }] },
     }
-    const out = mergeDayEntries(stored, [live('m9', true)])
+    const out = mergeDayEntries(stored, [live('m9', true)], DAY)
     expect(out.byGame.m9).toBeUndefined()
   })
   it('virada do dia zera tudo', () => {
@@ -201,7 +206,7 @@ describe('mergeDayEntries', () => {
       date: '2026-09-13',
       byGame: { m9: [{ rule: 'entrada_ltd', label: 'x', minute: 80, at: '2026-09-13T13:00:00-03:00', gameId: 'm9' }] },
     }
-    const out = mergeDayEntries(stored, [live('m1')])
+    const out = mergeDayEntries(stored, [live('m1')], DAY)
     expect(out.byGame.m9).toBeUndefined()
     expect(out.byGame.m1).toHaveLength(1)
   })
@@ -210,7 +215,7 @@ describe('mergeDayEntries', () => {
       date: '2026-09-13',
       byGame: { m9: [{ rule: 'entrada_ltd', label: 'x', minute: 80, at: '2026-09-13T13:00:00-03:00', gameId: 'm9' }] },
     }
-    const out = mergeDayEntries(stored, [])
+    const out = mergeDayEntries(stored, [], DAY)
     expect(out.byGame.m9).toHaveLength(1)
   })
 })
@@ -290,5 +295,41 @@ describe('alertsSeenAt', () => {
     expect(countUnseen(items, seen - 1)).toBe(1)
     expect(countUnseen(items, 0)).toBe(2)
     expect(countUnseen([], seen)).toBe(0)
+  })
+})
+
+describe('sound prefs', () => {
+  const EN = 'dataPlay.scanner.alertsSound'
+  const PR = 'dataPlay.scanner.alertSoundPreset'
+  beforeEach(() => {
+    localStorage.removeItem(EN)
+    localStorage.removeItem(PR)
+  })
+  it('default desligado, preset Ping', () => {
+    expect(loadSoundEnabled()).toBe(false)
+    expect(loadSoundPreset()).toBe('ping')
+  })
+  it('persiste toggle e preset', () => {
+    saveSoundEnabled(true)
+    saveSoundPreset('chime')
+    expect(loadSoundEnabled()).toBe(true)
+    expect(loadSoundPreset()).toBe('chime')
+  })
+  it('preset inválido volta ao default', () => {
+    saveSoundPreset('ops')
+    expect(loadSoundPreset()).toBe('ping')
+  })
+  it('storage quebrado não lança', () => {
+    const broken = {
+      getItem() {
+        throw new Error('x')
+      },
+      setItem() {
+        throw new Error('x')
+      },
+    }
+    expect(loadSoundEnabled(broken)).toBe(false)
+    expect(loadSoundPreset(broken)).toBe('ping')
+    expect(() => saveSoundEnabled(true, broken)).not.toThrow()
   })
 })

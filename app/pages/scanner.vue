@@ -187,10 +187,14 @@
         :items="panelItems"
         :open="!alertsCollapsed"
         :loading="loading && !snapshot"
+        :sound-enabled="soundEnabled"
+        :sound-preset="soundPreset"
         collapse-on-outside
         @toggle="toggleAlertsCollapsed"
         @select="highlightGame"
         @collapse="collapseAlertsPanel"
+        @sound-toggle="toggleSound"
+        @sound-pick="pickSound"
       />
     </aside>
 
@@ -211,9 +215,13 @@
           <ScannerAlertsPanel
             :items="panelItems"
             :open="true"
+            :sound-enabled="soundEnabled"
+            :sound-preset="soundPreset"
             toggle-icon="i-lucide-x"
             toggle-label="Fechar"
             @toggle="alertsDrawer = false"
+            @sound-toggle="toggleSound"
+            @sound-pick="pickSound"
             @select="
               (id) => {
                 alertsDrawer = false
@@ -234,6 +242,17 @@ import { filterBetsForGame } from '~/utils/preLiveBets'
 import { ODDS_PRESET_OPTIONS } from '~/utils/oddsPresets'
 import { SP_TZ } from '~/utils/timezone'
 import { isAgeGateDismissed } from '~/utils/pwaInstall'
+import {
+  SOUND_PRESETS,
+  entryTag,
+  entryTitle,
+  formatAlertTime,
+  loadSoundEnabled,
+  loadSoundPreset,
+  saveSoundEnabled,
+  saveSoundPreset,
+} from '~/utils/scanner'
+import { playPreset, unlockSound } from '~/utils/alertSound'
 
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -301,6 +320,52 @@ const panelItems = computed(() =>
     .filter((n) => n.kind === 'entrada' || String(n.rule || '').startsWith('entrada_'))
     .sort((a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0)),
 )
+
+// Som de alerta novo — opt-in persistido; desbloqueio no gesto do toggle.
+const toast = useToast()
+const soundEnabled = ref(false)
+const soundPreset = ref('ping')
+const hadSnapshot = ref(false) // guard do 1º snapshot: dia inteiro não é "novo"
+onMounted(() => {
+  soundEnabled.value = loadSoundEnabled()
+  soundPreset.value = loadSoundPreset()
+})
+async function toggleSound() {
+  const next = !soundEnabled.value
+  soundEnabled.value = next
+  saveSoundEnabled(next)
+  if (next) await unlockSound() // gesto → AudioContext resume; play faz guard running
+}
+function pickSound(id) {
+  soundPreset.value = SOUND_PRESETS.some((p) => p.id === id) ? id : 'ping'
+  saveSoundPreset(soundPreset.value)
+  if (soundEnabled.value) playPreset(soundPreset.value) // preview imediato
+}
+
+// Toast + som agregados: SÓ painel fechado (desktop E drawer), nunca no
+// primeiro snapshot (dia inteiro pareceria "novo"). Watch raso!
+watch(newEntries, (entries) => {
+  if (!entries?.length || !hadSnapshot.value) return
+  if (!alertsCollapsed.value || alertsDrawer.value) return
+  const first = entries[0]
+  const title =
+    entries.length === 1
+      ? `${entryTitle(first.rule, first.label)} · ${first.home} x ${first.away}`
+      : `${entries.length} novos alertas`
+  toast.add({
+    title,
+    description:
+      entries.length === 1
+        ? `${formatAlertTime(first.at, Date.now())} · ${first.league || ''}`.trim()
+        : `${entryTag(first.rule)} · ${first.home} x ${first.away} (+${entries.length - 1})`,
+    color: 'primary',
+    onClick: () => {
+      alertsCollapsed.value = false
+      highlightGame(first.gameId)
+    },
+  })
+  if (soundEnabled.value) playPreset(soundPreset.value)
+})
 
 // Destaque reutilizável: Telegram (?game=) e clique do painel usam o mesmo caminho.
 function highlightGame(id, list = games.value) {
@@ -375,6 +440,7 @@ const otherGames = computed(() =>
 
 // Aplica um snapshot já validado pelo safeParse no estado da página.
 function applySnapshot(parsed) {
+  hadSnapshot.value = snapshot.value != null // ciclo anterior: 1º snapshot suprime toast
   const localHistory = loadLocalHistory()
   const games = (parsed.games || []).map((g) => {
     const merged = mergeHistories(g.notifications, localHistory[g.id])
