@@ -252,7 +252,7 @@ import {
   saveSoundEnabled,
   saveSoundPreset,
 } from '~/utils/scanner'
-import { playPreset, unlockSound } from '~/utils/alertSound'
+import { playPreset, previewPreset, unlockSound } from '~/utils/alertSound'
 
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -329,17 +329,28 @@ const hadSnapshot = ref(false) // guard do 1º snapshot: dia inteiro não é "no
 onMounted(() => {
   soundEnabled.value = loadSoundEnabled()
   soundPreset.value = loadSoundPreset()
+  // Som persistido ligado de outra sessão: o contexto nasce suspenso
+  // (autoplay policy) e o play do watch sai mudo até o 1º gesto — o
+  // primeiro clique/tecla em qualquer lugar resume.
+  const gestureUnlock = () => {
+    if (soundEnabled.value) unlockSound()
+  }
+  window.addEventListener('pointerdown', gestureUnlock)
+  window.addEventListener('keydown', gestureUnlock)
 })
 async function toggleSound() {
   const next = !soundEnabled.value
   soundEnabled.value = next
   saveSoundEnabled(next)
-  if (next) await unlockSound() // gesto → AudioContext resume; play faz guard running
+  if (next) {
+    await unlockSound() // gesto → AudioContext resume
+    playPreset(soundPreset.value) // confirmação audível de que o som saiu do mudo
+  }
 }
-function pickSound(id) {
+async function pickSound(id) {
   soundPreset.value = SOUND_PRESETS.some((p) => p.id === id) ? id : 'ping'
   saveSoundPreset(soundPreset.value)
-  if (soundEnabled.value) playPreset(soundPreset.value) // preview imediato
+  await previewPreset(soundPreset.value) // preview sempre, mesmo com master off; o gesto desbloqueia o contexto
 }
 
 // Toast + som agregados: SÓ painel fechado (desktop E drawer), nunca no

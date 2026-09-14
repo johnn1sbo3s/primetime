@@ -52,3 +52,10 @@ export function playPreset(id) {
     return false
   }
 }
+// Preview p/ clique no preset: desbloqueia (gesto) e toca sempre, mesmo com
+// o som master desligado. Sem isso o clique parece "morto" e, com o som
+// persistido de outra sessão, o contexto nunca resume (autoplay policy).
+export async function previewPreset(id) {
+  await unlockSound()
+  return playPreset(id)
+}
