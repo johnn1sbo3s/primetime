@@ -191,7 +191,7 @@
         :sound-preset="soundPreset"
         collapse-on-outside
         @toggle="toggleAlertsCollapsed"
-        @select="highlightGame"
+        @select="selectAlert"
         @collapse="collapseAlertsPanel"
         @sound-toggle="toggleSound"
         @sound-pick="pickSound"
@@ -392,6 +392,12 @@ function highlightGame(id, list = games.value) {
   highlightTimer = setTimeout(() => {
     activeHighlight.value = null
   }, 12_000)
+}
+
+// Clique no painel aberto: colapsa antes do scroll p/ liberar a tela.
+function selectAlert(id, list = games.value) {
+  alertsCollapsed.value = true
+  highlightGame(id, list)
 }
 
 // Destaque vindo do Telegram (?game=<id>): id ainda não encontrado no
