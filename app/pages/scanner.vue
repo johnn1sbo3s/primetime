@@ -355,7 +355,7 @@ async function pickSound(id) {
 
 // Toast + som agregados: SÓ painel fechado (desktop E drawer), nunca no
 // primeiro snapshot (dia inteiro pareceria "novo"). Watch raso!
-watch(newEntries, (entries) => {
+watch(newEntries, async (entries) => {
   if (!entries?.length || !hadSnapshot.value) return
   if (!alertsCollapsed.value || alertsDrawer.value) return
   const first = entries[0]
@@ -372,10 +372,17 @@ watch(newEntries, (entries) => {
     color: 'primary',
     onClick: () => {
       alertsCollapsed.value = false
+      unlockSound() // clique no toast é gesto real → libera o áudio pros próximos alertas
       highlightGame(first.gameId)
     },
   })
-  if (soundEnabled.value) playPreset(soundPreset.value)
+  // O play sozinho sai mudo se o contexto ainda está suspenso (página aberta
+  // com som já ligado, sem gesto depois do load). Tenta destravar antes de
+  // tocar; sem gesto recente o resume falha em silêncio e mantém o mutismo.
+  if (soundEnabled.value) {
+    await unlockSound()
+    playPreset(soundPreset.value)
+  }
 })
 
 // Destaque reutilizável: Telegram (?game=) e clique do painel usam o mesmo caminho.

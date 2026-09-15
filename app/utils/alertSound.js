@@ -25,7 +25,7 @@ export async function unlockSound() {
     const AC = scope.AudioContext || scope.webkitAudioContext || globalThis.AudioContext
     if (!AC) return false
     if (!ctx) ctx = new AC()
-    if (ctx.state === 'suspended') await ctx.resume()
+    if (ctx.state !== 'running') await ctx.resume()
     return isSoundReady()
   } catch {
     return false
